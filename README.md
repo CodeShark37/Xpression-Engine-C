@@ -1,5 +1,5 @@
 # Xpression Engine em C
-O Xpression Engine até ao momento é motor modular de avaliação de expressões encapsuladas no formato `${EXPRESSION}` com suporte a funções built-in e export da AST em (JSON/XML).
+O Xpression Engine até ao momento é motor modular de avaliação de expressões encapsuladas no formato `${EXPRESSION}` com suporte a funções built-in, variavéis de contexto e export da AST em (JSON/XML).
 
 ## Introdução
 O **Xpression Engine** é um projecto escrito em C que avalia expressões encapsuladas no formato `${EXPRESSION}`.  
@@ -49,7 +49,19 @@ O executável será gerado como:
 - `-eval` → avalia a expressão passada.
 - `-f` → avalia a expressão passada por ficheiro.
 
-
+### Variavéis de contexto de exemplo Incluídas
+ ```
+root
+ ├─ KEYWORD.FUNCTION = "FUNCTION_VALUE"
+ ├─ CONFIG.DB.USER.NAME = "db_user"
+ ├─ SYSTEM.CONFIG.NETWORK.PROXY.HOST = "10.0.0.1"
+ ├─ RULE
+ ├─ IDENTIFIER = "X123"
+ ├─ A = 10, B = 20, C = 5, D = 15
+ ├─ PARAMETERS_LIST = "char*,int"
+ └─ STATEMENTS = "return 0;"
+```
+- Acessar as variavéis usando `${KEYWORD.FUNCTION}` , `${A}`
 ---
 
 ## Exemplos de uso
