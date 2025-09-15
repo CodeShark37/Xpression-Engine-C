@@ -1,6 +1,6 @@
 ![XpressionLogo](/img/xpressionsocial.png)
 # Xpression Engine em C
-O Xpression Engine até ao momento é motor modular de avaliação de expressões encapsuladas no formato `${EXPRESSION}` com suporte a funções built-in, variavéis de contexto e export da AST em (JSON/XML).
+O Xpression Engine até ao momento é um motor modular de avaliação de expressões encapsuladas no formato `${EXPRESSION}` com suporte a funções built-in, variavéis de contexto e export da AST em (JSON/XML).
 [![Language](https://img.shields.io/badge/language-C-blue)]()  
   
 ## Introdução
@@ -20,6 +20,18 @@ Ele pode:
 - Nenhuma biblioteca externa obrigatória além da standard C
 
 ---
+### Features
+Uma expressão embutida entre ${ e }, dentro da expressão temos:
+
+- Identificadores (NAME, como CONFIG, FUNC, MATH)
+
+- Encadeamentos com ponto (.) → CONFIG.DB.USER
+
+- Funções com parênteses e argumentos separados por vírgula (FUNC(a, b, c))
+
+- Literais: número (123, -4.56), string ("abc", 'xyz'), lista ([1, 2, 'a'])
+
+- Argumentos de função podem ser expressões completas (incluindo listas, funções, encadeamentos, etc)
 
 ## Instalação
 
@@ -115,7 +127,7 @@ bult-ins
 
 1. **Soma de constantes**
 ```bash
-./expr -json -eval "${SUM(10,20,12)}"
+./xpression -json -eval "${SUM(10,20,12)}"
 ```
 **Saída AST (JSON):**
 ```json
@@ -135,7 +147,7 @@ bult-ins
 
 2. **Máximo de valores**
 ```bash
-./expr -eval "${MAX(1,9,4,7)}"
+./xpression -eval "${MAX(1,9,4,7)}"
 ```
 **EVALUATED:** `9`
 
@@ -143,7 +155,7 @@ bult-ins
 
 3. **Mínimo de valores**
 ```bash
-./expr -eval "${MIN(5,8,3,10)}"
+./xpression -eval "${MIN(5,8,3,10)}"
 ```
 **EVALUATED:** `3`
 
@@ -151,7 +163,7 @@ bult-ins
 
 4. **Uppercase de string simples**
 ```bash
-./expr -eval "${UPPERCASE('hello')}"
+./xpression -eval "${UPPERCASE('hello')}"
 ```
 **EVALUATED:** `HELLO`
 
@@ -159,7 +171,7 @@ bult-ins
 
 5. **Uppercase alternativa**
 ```bash
-./expr -eval "${TO_UPPER('world')}"
+./xpression -eval "${TO_UPPER('world')}"
 ```
 **EVALUATED:** `WORLD`
 
@@ -167,7 +179,7 @@ bult-ins
 
 6. **Concatenação mista**
 ```bash
-./expr -eval "${MIXED(42,'abc')}"
+./xpression -eval "${MIXED(42,'abc')}"
 ```
 **EVALUATED:** `42|abc`
 
@@ -175,7 +187,7 @@ bult-ins
 
 7. **SUM com negativo**
 ```bash
-./expr -eval "${SUM(-5,10,7)}"
+./xpression -eval "${SUM(-5,10,7)}"
 ```
 **EVALUATED:** `12`
 
@@ -183,7 +195,7 @@ bult-ins
 
 8. **MAX com valores negativos**
 ```bash
-./expr -eval "${MAX(-1,-3,-7)}"
+./xpression -eval "${MAX(-1,-3,-7)}"
 ```
 **EVALUATED:** `-1`
 
@@ -191,7 +203,7 @@ bult-ins
 
 9. **MIN com zeros**
 ```bash
-./expr -eval "${MIN(0,5,-2,7)}"
+./xpression -eval "${MIN(0,5,-2,7)}"
 ```
 **EVALUATED:** `-2`
 
@@ -199,7 +211,7 @@ bult-ins
 
 10. **TO_UPPER em palavra com espaço**
 ```bash
-./expr -eval "${TO_UPPER('hello world')}"
+./xpression -eval "${TO_UPPER('hello world')}"
 ```
 **EVALUATED:** `HELLO WORLD`
 
@@ -209,7 +221,7 @@ bult-ins
 
 11. **Soma em cascata**
 ```bash
-./expr -eval "${SUM(SUM(1,2,3),10)}"
+./xpression -eval "${SUM(SUM(1,2,3),10)}"
 ```
 **EVALUATED:** `16`
 
@@ -217,7 +229,7 @@ bult-ins
 
 12. **Máximo aninhado**
 ```bash
-./expr -eval "${MAX(2,MAX(5,1),3)}"
+./xpression -eval "${MAX(2,MAX(5,1),3)}"
 ```
 **EVALUATED:** `5`
 
@@ -225,7 +237,7 @@ bult-ins
 
 13. **Mínimo dentro de soma**
 ```bash
-./expr -eval "${SUM(10,MIN(5,2,8))}"
+./xpression -eval "${SUM(10,MIN(5,2,8))}"
 ```
 **EVALUATED:** `12`
 
@@ -233,7 +245,7 @@ bult-ins
 
 14. **Uppercase de palavra com espaço**
 ```bash
-./expr -eval "${UPPERCASE('foo bar')}"
+./xpression -eval "${UPPERCASE('foo bar')}"
 ```
 **EVALUATED:** `FOO BAR`
 
@@ -241,7 +253,7 @@ bult-ins
 
 15. **TO_UPPER em string com números**
 ```bash
-./expr -eval "${TO_UPPER('abc123')}"
+./xpression -eval "${TO_UPPER('abc123')}"
 ```
 **EVALUATED:** `ABC123`
 
@@ -249,7 +261,7 @@ bult-ins
 
 16. **MIXED com SUM**
 ```bash
-./expr -eval "${MIXED(SUM(1,2,3),'xyz')}"
+./xpression -eval "${MIXED(SUM(1,2,3),'xyz')}"
 ```
 **EVALUATED:** `6|xyz`
 
@@ -257,7 +269,7 @@ bult-ins
 
 17. **Soma grande**
 ```bash
-./expr -eval "${SUM(100,200,300,400)}"
+./xpression -eval "${SUM(100,200,300,400)}"
 ```
 **EVALUATED:** `1000`
 
@@ -265,7 +277,7 @@ bult-ins
 
 18. **Combinação de MIN e MAX**
 ```bash
-./expr -eval "${SUM(MIN(1,9,3),MAX(4,6,2))}"
+./xpression -eval "${SUM(MIN(1,9,3),MAX(4,6,2))}"
 ```
 **EVALUATED:** `7`
 
@@ -273,7 +285,7 @@ bult-ins
 
 19. **String nested em uppercase**
 ```bash
-./expr -eval "${UPPERCASE(TO_UPPER('abc def'))}"
+./xpression -eval "${UPPERCASE(TO_UPPER('abc def'))}"
 ```
 **EVALUATED:** `ABC DEF`
 
@@ -281,7 +293,7 @@ bult-ins
 
 20. **MIXED combinado**
 ```bash
-./expr -eval "${MIXED(MAX(1,9),MIN(2,8),SUM(3,4))}"
+./xpression -eval "${MIXED(MAX(1,9),MIN(2,8),SUM(3,4))}"
 ```
 **EVALUATED:** `9|2|7`
 
