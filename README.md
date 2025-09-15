@@ -3,7 +3,6 @@
 O Xpression Engine até ao momento é motor modular de avaliação de expressões encapsuladas no formato `${EXPRESSION}` com suporte a funções built-in, variavéis de contexto e export da AST em (JSON/XML).
 [![Language](https://img.shields.io/badge/language-C-blue)]()  
   
-
 ## Introdução
 O **Xpression Engine** é um projecto escrito em C que avalia expressões encapsuladas no formato `${EXPRESSION}`.  
 Ele pode:
@@ -66,6 +65,49 @@ root
 ```
 - Acessar as variavéis usando `${KEYWORD.FUNCTION}` , `${A}`
 ---
+### Criando um contexto (`CtxNode`)
+
+Um contexto é uma árvore de nós (`CtxNode`), onde cada nó pode ter propriedades (strings, números) e filhos.
+
+Exemplo:
+```c
+#include "context.h"
+
+CtxNode *build_sample_context(void) {
+    CtxNode *root = ctx_new("root");
+    CtxNode *keyword = ctx_new("KEYWORD");
+    ctx_add_child(root, keyword);
+    ctx_set_prop(keyword, "FUNCTION", val_str("FUNCTION_VALUE"));
+    // ... restante do contexto ...
+    return root;
+}
+```
+### Adicionar função personalizada:
+
+```c
+#include "functions.h"
+Value fn_multiply(Value *args, int argc) {
+    if (argc != 2) return val_num(0);
+    return val_num(args[0].num * args[1].num);
+}
+register_func_cb("MULTIPLY", fn_multiply);
+```
+
+Funções padrão:
+ ```
+bult-ins
+ ├─ UPPERCASE() 
+ ├─ TO_UPPER() 
+ ├─ SUM()
+ ├─ MAX()
+ ├─ MIN()
+ └─ MIXED()
+```
+### Resumo
+
+- **CtxNode**: estrutura hierárquica para dados.  
+- **register_func_cb**: adiciona funções que podem ser chamadas nas expressões.  
+- **Expressões**: usam apenas funções registradas e valores literais.
 
 ## Exemplos de uso
 
