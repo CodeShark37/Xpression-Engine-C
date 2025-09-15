@@ -21,15 +21,15 @@ Ele pode:
 
 ---
 ### Features
-Uma expressão embutida entre ${ e }, dentro da expressão temos:
+Uma expressão embutida entre `${` e `}`, dentro da expressão temos:
 
-- Identificadores (NAME, como CONFIG, FUNC, MATH)
+- Identificadores `(NAME, como CONFIG, FUNC, MATH)`
 
-- Encadeamentos com ponto (.) → CONFIG.DB.USER
+- Encadeamentos com ponto (.) → `CONFIG.DB.USER`
 
-- Funções com parênteses e argumentos separados por vírgula (FUNC(a, b, c))
+- Funções com parênteses e argumentos separados por vírgula `(FUNC(a, b, c))`
 
-- Literais: número (123, -4.56), string ("abc", 'xyz'), lista ([1, 2, 'a'])
+- Literais: número `(123, -4.56)`, string `("abc", 'xyz')`, lista `([1, 2, 'a'])`
 
 - Argumentos de função podem ser expressões completas (incluindo listas, funções, encadeamentos, etc)
 
