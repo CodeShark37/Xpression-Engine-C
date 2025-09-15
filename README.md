@@ -12,15 +12,14 @@ Ele pode:
 - Registrar funções **built-in** customizadas (`SUM`, `MAX`, `MIN`, `UPPERCASE`, `TO_UPPER`, `MIXED`).
 - Criar e manipular contextos hierárquicos de dados (via `CtxNode`).
 
----
 
 ## Dependências
 - Compilador **C99+**
 - **CMake** (opcional)
 - Nenhuma biblioteca externa obrigatória além da standard C
 
----
-### Features
+
+## Features
 Uma expressão embutida entre `${` e `}`, dentro da expressão temos:
 
 - Identificadores `(NAME, como CONFIG, FUNC, MATH)`
@@ -47,7 +46,7 @@ O executável será gerado como:
 ./xpression
 ```
 
----
+
 
 ## Uso
 
