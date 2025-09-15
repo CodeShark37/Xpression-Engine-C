@@ -37,7 +37,7 @@ Uma expressão embutida entre `${` e `}`, dentro da expressão temos:
 ```bash
 git clone https://github.com/CodeShark37/Xpression-Engine-C.git
 cd Xpression-Engine-c
-make
+gcc -o xpression *.c
 ```
 
 O executável será gerado como:
