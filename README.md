@@ -1,4 +1,4 @@
-![XpressionLogo](/img/xpressionsocial.png)
+![XpressionLogo](/img/XpressionLogo2.png)
 # Xpression Engine em C
 O Xpression Engine até ao momento é um motor modular de avaliação de expressões encapsuladas no formato `${EXPRESSION}` com suporte a funções built-in, variavéis de contexto e export da AST em (JSON/XML).
 [![Language](https://img.shields.io/badge/language-C-blue)]()  
