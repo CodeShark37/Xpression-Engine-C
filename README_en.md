@@ -270,9 +270,9 @@ root
 #include "functions.h"
 
 // Define new function
-Value fn_multiply(Value *args, int argc) {
+Value *fn_multiply(Value* this, Value **args, size_t argc) {
     if (argc != 2) return val_num(0);
-    return val_num(args[0].num * args[1].num);
+    return val_num(args[0]->num * args[1]->num);
 }
 
 // Register function
