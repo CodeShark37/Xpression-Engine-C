@@ -4,9 +4,9 @@
 #include "value.h"
 
 typedef struct PropKV {
- char *key;
- Value *val;
- struct PropKV *next;
+	char *key;
+	Value *val;
+	struct PropKV *next;
 } PropKV;
 
 typedef struct CtxNode {

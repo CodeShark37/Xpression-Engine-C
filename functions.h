@@ -3,8 +3,13 @@
 
 #include "value.h"
 
-typedef Value *(*FuncCB)(Value *this_val, Value **args, size_t nargs);
-typedef struct FuncEntry { char *name; FuncCB cb; struct FuncEntry *next; } FuncEntry;
+typedef Value *(*FuncCB)(Value *this, Value **args, size_t argc);
+
+typedef struct FuncEntry { 
+	char *name;
+	FuncCB cb;
+	struct FuncEntry *next;
+} FuncEntry;
 
 
 void register_func_cb(const char *name, FuncCB cb);
