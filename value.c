@@ -111,7 +111,7 @@ int val_equals(Value *v1,Value *v2){
 }
 
 /* Comparação estável de valores (para uso em SORT) */
-int val_compare(const Value *a, const Value *b) {
+int val_compare_sort(const Value *a, const Value *b) {
     const Value *va = *(const Value **)a;
     const Value *vb = *(const Value **)b;
 
@@ -142,6 +142,34 @@ int val_compare(const Value *a, const Value *b) {
     }
 }
 
+int val_compare(const Value *a, const Value *b) {
+    if (!a || !b) return 0;
+
+    if (a->kind != b->kind) {
+        // ordenação estável entre tipos diferentes
+        return (a->kind < b->kind) ? -1 : 1;
+    }
+
+    switch (a->kind) {
+        case VALUE_NULL: return 0;
+        case VALUE_BOOL:
+            return (a->num == b->num) ? 0 : (a->num < b->num ? -1 : 1);
+        case VALUE_NUMBER:
+            return (a->num == b->num) ? 0 : (a->num < b->num ? -1 : 1);
+        case VALUE_STRING:
+            return strcmp(a->str ? a->str : NULL, b->str ? b->str : NULL);
+        case VALUE_LIST:
+            if (a->n_items != b->n_items)
+                return (a->n_items < b->n_items) ? -1 : 1;
+            for (size_t i = 0; i < a->n_items; i++) {
+                int cmp = val_compare(a->items[i], b->items[i]);
+                if (cmp != 0) return cmp;
+            }
+            return 0;
+        default:
+            return 0;
+    }
+}
 
 
 char *value_to_string(const Value *v) {

@@ -40,7 +40,7 @@ static Value *resolve_function(Node *child, CtxNode *root, Value *current_val) {
         argv[a] = eval_node(child->children[a], root);
     }
 
-    FuncCB cb = find_func_cb(child->value);
+    Func cb = find_func_cb(child->value);
     Value *res = NULL;
     Value *this_for_cb = current_val ? val_dup(current_val) : val_null();
     if (cb) res = cb(this_for_cb, argv, na);
@@ -143,7 +143,7 @@ Value *eval_node(Node *n, CtxNode *ctx) {
                 /* For top-level function calls we evaluate args in ctx (root caller's context) */
                 argv[i] = eval_node(n->children[i], ctx);
             }
-            FuncCB cb = find_func_cb(n->value);
+            Func cb = find_func_cb(n->value);
             Value *res = NULL;
             if (cb) res = cb(NULL, argv, na);
             else res = val_null();

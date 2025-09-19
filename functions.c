@@ -211,7 +211,7 @@ static Value *fn_map(Value *this, Value **args, size_t argc) {
         return val_null();
 
     const char *fn_name = args[1]->str;  // função de destino
-    FuncCB cb = find_func_cb(fn_name);
+    Func cb = find_func_cb(fn_name);
     if (!cb) return val_null();
 
     Value *result = val_list();
@@ -249,7 +249,7 @@ static Value *fn_sort(Value *this, Value **args, size_t argc) {
         val_list_append(result, val_dup(args[0]->items[i]));
     }
 
-    qsort(result->items, result->n_items, sizeof(Value*), (int(*)(const void*,const void*))val_compare);
+    qsort(result->items, result->n_items, sizeof(Value*), (int(*)(const void*,const void*))val_compare_sort);
     return result;
 }
 
@@ -266,27 +266,65 @@ static Value *fn_if(Value *this, Value **args, size_t argc) {
     return truthy ? val_dup(args[1]) : val_dup(args[2]);
 }
 
+/* ==== Funções de comparação ==== */
+
+static Value *fn_eq(Value *this, Value **args, size_t argc) {
+    if (argc < 2) return val_bool(0);
+    return val_bool(val_compare(args[0], args[1]) == 0);
+}
+
+static Value *fn_neq(Value *this, Value **args, size_t argc) {
+    if (argc < 2) return val_bool(0);
+    return val_bool(val_compare(args[0], args[1]) != 0);
+}
+
+static Value *fn_gt(Value *this, Value **args, size_t argc) {
+    if (argc < 2) return val_bool(0);
+    return val_bool(val_compare(args[0], args[1]) > 0);
+}
+
+static Value *fn_lt(Value *this, Value **args, size_t argc) {
+    if (argc < 2) return val_bool(0);
+    return val_bool(val_compare(args[0], args[1]) < 0);
+}
+
+static Value *fn_gte(Value *this, Value **args, size_t argc) {
+    if (argc < 2) return val_bool(0);
+    return val_bool(val_compare(args[0], args[1]) >= 0);
+}
+
+static Value *fn_lte(Value *this, Value **args, size_t argc) {
+    if (argc < 2) return val_bool(0);
+    return val_bool(val_compare(args[0], args[1]) <= 0);
+}
+
 
 /* register builtins */
 void register_builtins_default(void) {
-    register_func_cb("UPPERCASE", fn_uppercase);
-	register_func_cb("MUL", fn_mul);
-    register_func_cb("CONCAT", fn_concat);
-	register_func_cb("COUNT", fn_count);
-	register_func_cb("CONTAINS", fn_contains);
-    register_func_cb("SUM", fn_sum);
-    register_func_cb("MIN", fn_min);
-    register_func_cb("MAX", fn_max);
-    register_func_cb("MIXED", fn_mixed);
-    register_func_cb("IF", fn_if);
-    register_func_cb("MAP", fn_map);
-    register_func_cb("UNIQUE", fn_unique);
-    register_func_cb("AVG", fn_avg);
-    register_func_cb("SORT", fn_sort);
+    register_function("UPPERCASE", fn_uppercase);
+	register_function("MUL", fn_mul);
+    register_function("CONCAT", fn_concat);
+	register_function("COUNT", fn_count);
+	register_function("CONTAINS", fn_contains);
+    register_function("SUM", fn_sum);
+    register_function("MIN", fn_min);
+    register_function("MAX", fn_max);
+    register_function("MIXED", fn_mixed);
+    register_function("IF", fn_if);
+    register_function("MAP", fn_map);
+    register_function("UNIQUE", fn_unique);
+    register_function("AVG", fn_avg);
+    register_function("SORT", fn_sort);
+	register_function("EQ", fn_eq);
+    register_function("NEQ", fn_neq);
+    register_function("GT", fn_gt);
+    register_function("LT", fn_lt);
+    register_function("GTE", fn_gte);
+    register_function("LTE", fn_lte);
 
 }
 
-void register_func_cb(const char *name, FuncCB cb) {
+void register_function(const char *name, Func cb) {
     FuncEntry *e = malloc(sizeof(FuncEntry));
 	e->name = strdup(name);
 	e->cb = cb;
@@ -294,7 +332,7 @@ void register_func_cb(const char *name, FuncCB cb) {
 	func_registry = e;
 }
 
-FuncCB find_func_cb(const char *name) {
+Func find_func_cb(const char *name) {
     for (FuncEntry *e = func_registry; e; e = e->next){ 
 		if (!strcmp(e->name, name)) return e->cb;
 	}

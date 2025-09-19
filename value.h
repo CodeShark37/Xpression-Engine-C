@@ -26,6 +26,7 @@ Value *val_bool(unsigned int b);
 Value *val_list(void);
 int val_equals(Value *v1,Value *v2);
 int val_compare(const Value *a, const Value *b);
+int val_compare_sort(const Value *a, const Value *b);
 void val_list_append(Value *L, Value *it);
 void val_free(Value *v);
 Value *val_dup(const Value *src);
