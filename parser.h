@@ -3,7 +3,21 @@
 
 #include "ast.h"
 
+typedef struct {
+    char **nodes;
+    int error_code;
+} PlaceholderResult;
+
+typedef struct {
+    const char *src, *pos;
+    int line, col;
+    char error_msg[256];
+    int has_error;
+} Parser;
+
+
 Node *parse_expression_str(const char *s);
-int extract_placeholders(const char *text, char ***out, size_t *out_count);
+const char *parser_get_last_error(void);
+PlaceholderResult parse_placeholders(const char *text);
 
 #endif

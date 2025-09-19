@@ -3,9 +3,10 @@
 #include <string.h>
 #include <stdio.h>
 
+
 Node *node_new(NodeKind k, const char *value) {
     Node *n = calloc(1, sizeof(Node));
-    if (!n) { perror("calloc"); exit(1); }
+    if (!n) { perror("calloc"); return NULL; }
     n->kind = k;
     n->value = value ? strdup(value) : NULL;
     return n;
@@ -13,7 +14,7 @@ Node *node_new(NodeKind k, const char *value) {
 
 void node_add(Node *parent, Node *child) {
     parent->children = realloc(parent->children, sizeof(Node*)*(parent->n_children+1));
-    if (!parent->children) { perror("realloc"); exit(1); }
+    if (!parent->children) { perror("realloc"); return; }
     parent->children[parent->n_children++] = child;
 }
 

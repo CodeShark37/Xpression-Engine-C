@@ -35,6 +35,7 @@ static void print_json_node_rec(Node *n, int indent) {
         case NODE_LIST: printf("\"list\""); break;
         case NODE_STRING: printf("\"string\""); break;
         case NODE_NUMBER: printf("\"number\""); break;
+		case NODE_BOOL: printf("\"boolean\""); break;
         case NODE_IDENTIFIER: printf("\"identifier\""); break;
     }
     if (n->value) {
@@ -85,6 +86,7 @@ static void print_xml_node_rec(Node *n, int indent) {
         case NODE_LIST: tag = "list"; break;
         case NODE_STRING: tag = "string"; break;
         case NODE_NUMBER: tag = "number"; break;
+        case NODE_BOOL: tag = "boolean"; break;
         case NODE_IDENTIFIER: tag = "identifier"; break;
     }
     printf("<%s", tag);
