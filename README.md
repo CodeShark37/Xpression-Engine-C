@@ -48,7 +48,7 @@ O **Xpression Engine** é uma biblioteca em C que permite avaliar expressões en
 | Feature | Status |#|
 |---------|--------|-|
 | Avaliação de expressões | Implementado | ✅ |
-| Funções built-in | 6 funções disponíveis| ✅ |
+| Funções built-in | 21 funções disponíveis| ✅ |
 | Contexto hierárquico | Suporte completo | ✅ |
 | Export AST (JSON/XML) | Implementado | ✅ |
 | Extensibilidade | API para funções customizadas | ✅ |
@@ -59,7 +59,7 @@ O **Xpression Engine** é uma biblioteca em C que permite avaliar expressões en
 - **Identificadores**: `CONFIG`, `SYSTEM`, `USER`
 - **Encadeamento**: `CONFIG.DB.USER` 
 - **Funções**: `SUM(a, b, c)`
-- **Literais**: números (`123`, `-4.56`), strings (`"abc"`, `'xyz'`), listas (`[1, 2, 'a']`)
+- **Literais**: números (`123`, `-4.56`), strings (`"abc"`, `'xyz'`), booleanos (`true`, `false`),listas (`[1, 2, 'a']`)
 - **Aninhamento**: `SUM(MAX(1,2), MIN(3,4))`
 
 ## Instalação
@@ -78,7 +78,7 @@ git clone https://github.com/CodeShark37/Xpression-Engine-C.git
 cd Xpression-Engine-C
 
 # Compile
-gcc -o xpression *.c
+gcc -o xpression -O2 -s *.c
 
 # Execute
 ./xpression
@@ -114,7 +114,7 @@ gcc -o xpression *.c
 | `-json` | Exporta AST em JSON | `./xpression -json "${MAX(5,3)}"` |
 | `-xml` | Exporta AST em XML | `./xpression -xml "${MIN(2,8)}"` |
 | `-group` ou `-g` | AST agrupada | `./xpression -json -g "${SUM(1,2)}"` |
-| `-f arquivo` | Lê expressão de arquivo | `./xpression -f input.txt` |
+| `-f arquivo` | Lê expressão de arquivo | `./xpression -eval -f input.txt` |
 
 ### Exemplos de Comandos
 
@@ -138,17 +138,42 @@ gcc -o xpression *.c
 
 | Função | Descrição | Exemplo | Resultado |
 |--------|-----------|---------|-----------|
-| `SUM(...)` | Soma todos os argumentos | `SUM(1, 2, 3, 4)` | `10` |
+| `SUM(...)` | Soma todos os argumentos | `MUL([5, 2, 8, 1],4)` | `320` |
+| `MUL(...)` | Multiplica todos os argumentos | `AVG([5, 2, 8, 1])` | `4` |
 | `MAX(...)` | Retorna o maior valor | `MAX(5, 2, 8, 1)` | `8` |
 | `MIN(...)` | Retorna o menor valor | `MIN(5, 2, 8, 1)` | `1` |
+| `AVG(...)` | Calcula a média dos valores | `AVG([5, 2, 8, 1])` | `4` |
+
 
 ### Texto
 
 | Função | Descrição | Exemplo | Resultado |
 |--------|-----------|---------|-----------|
 | `UPPERCASE(texto)` | Converte para maiúsculas | `UPPERCASE('hello')` | `"HELLO"` |
-| `TO_UPPER(texto)` | Alias para UPPERCASE | `TO_UPPER('world')` | `"WORLD"` |
+| `CONCAT(...)` | Concatena strings | `CONCAT('hello',' Xpression')` | `"hello Xpression"` |
 | `MIXED(...)` | Concatena com separador | `MIXED(42, 'abc')` | `"42\|abc"` |
+
+### Lógicos
+
+| Função | Descrição | Exemplo | Resultado |
+|--------|-----------|---------|-----------|
+| `IF(cond,YES,NO)` | Condicional Se | `IF(EQ(2,4),SUM(1,1),7))` | `7` |
+| `EQ(x,y)` | Lógico Igual | `EQ(2,4)` | `false` |
+| `NEQ(x,y)` | Lógico Não é Igual | `NEQ(2,4)` | `true` |
+| `LT(x,y)` | Lógico Menor que | `LT(2,4)` | `true` |
+| `GT(x,y)` | Lógico Maior que | `GT(2,4)` | `false` |
+| `LTE(x,y)` | Lógico Menor ou Igual | `LTE(2,4)` | `true` |
+| `GTE(x,y)` | Lógico Maior ou Igual | `GTE(2,4)` | `false` |
+
+### Mistura
+
+| Função | Descrição | Exemplo | Resultado |
+|--------|-----------|---------|-----------|
+| `COUNT([...],x)` | Quantas vezes x aparece no Array | `COUNT([4,'a',3,3],3)` | `2` |
+| `CONTAINS([...],x)` | Se x está contido no Array | `CONTAINS([4,'a',3,3],'a')` | `true` |
+| `MAP([...],FUNC)` | Aplica FUNC a todo elem do Array| `MAP([[1,5,2,1],[3,3,4],[5,5]],UNIQUE)` | `[[1,5,2],[3,4],[5]]` |
+| `SORT([...])` | Ordena o Array | `SORT(UNIQUE([1,2,34,4,3,432,22,2,3,1]))` | `[1,2,3,4,22,34,432]` |
+| `UNIQUE([...])` | Gera o Array sem elem repetidos | `UNIQUE([1,2,34,4,3,432,22,2,3,1])` | `1,2,34,4,3,432,22]` |
 
 ## 🌳 Variáveis de Contexto
 
@@ -201,7 +226,7 @@ root
 
 # 2. Processamento de texto
 ./xpression -eval "${UPPERCASE('hello')}"    # → "HELLO"
-./xpression -eval "${TO_UPPER('world')}"     # → "WORLD"
+./xpression -eval "${MAP([[1,2],[3,4],[5]],SUM)}"     # → [3,7,5]
 ./xpression -eval "${MIXED(42, 'abc')}"      # → "42|abc"
 
 # 3. Valores negativos
@@ -277,7 +302,7 @@ Value *fn_multiply(Value* this, Value **args, size_t argc) {
 }
 
 // Registar função
-register_func_cb("MULTIPLY", fn_multiply);
+register_function("MULTIPLY", fn_multiply);
 ```
 
 ### Criando Contextos Customizados
@@ -303,10 +328,24 @@ CtxNode *build_custom_context(void) {
 
 ### Problemas Comuns
 
-| Problema | Causa | Solução |
-|----------|-------|---------|
-| `Malformed placeholders` | Expressão mal formada | Verifique `${}` e parênteses |
-| `Parse Failed` | Sintaxe inválida dentro de `${}` | Verifique caracteres inválidos |
+
+| Categoria | Erro | Exemplo de Entrada | Mensagem de Erro | Descrição |
+|-----------|------|-------------------|------------------|-----------|
+| **#**|Expressão mal formada | `${EQ(1,X)`|`Malformed placeholders` | Verifique `${}` e parênteses |
+| **#**| Sintaxe inválida dentro de `${}` |`${UPPERCASE('test)}` |`Parse Failed` |Verifique caracteres inválidos ou falta de um válido|
+| **EOF Inesperado** | Fim de entrada | `""` (string vazia) | `L1:C1: unexpected EOF` | Entrada terminou inesperadamente |
+| **Caracteres Inválidos** | Caractere não reconhecido | `"user@name"` | `L1:C5: unexpected '@'` | Encontrado caractere que não pode iniciar uma expressão |
+| **Strings** | String não terminada | `"'hello world"` | `L1:C1: unterminated string` | String literal sem aspas de fechamento |
+| **Arrays** | Array não terminado | `"[1, 2, 3"` | `L1:C8: unterminated array` | Array sem colchete de fechamento `]` |
+| **Arrays** | Separador inválido em array | `"[1 2 3]"` | `L1:C4: expected ',' or ']' in array` | Faltam vírgulas entre elementos do array |
+| **Funções** | Função não terminada | `"func(1, 2"` | `L1:C9: expected ',' or ')' in function call` | Função sem parêntese de fechamento `)` |
+| **Funções** | Separador inválido em função | `"func(a b c)"` | `L1:C7: expected ',' or ')' in function call` | Faltam vírgulas entre argumentos da função |
+| **Multi-acesso** | Multi-acesso não terminado | `"obj.[prop1, prop2"` | `L1:C16: unterminated multi-access` | Multi-acesso sem colchete de fechamento `]` |
+| **Multi-acesso** | Expressão inválida em multi-acesso | `"obj.[, prop2]"` | `L1:C6: expected expression in multi-access` | Expressão faltando ou inválida dentro de `.[...]` |
+| **Multi-acesso** | Separador inválido em multi-acesso | `"obj.[prop1 prop2]"` | `L1:C12: expected ',' or ']' in multi-access` | Faltam vírgulas entre elementos do multi-acesso |
+| **Propriedades** | Propriedade faltando após ponto | `"obj."` | `L1:C5: expected property after '.'` | Ponto não seguido de propriedade válida |
+| **Sintaxe** | Conteúdo extra após expressão | `"func() extra"` | `L1:C8: unexpected content after expression: 'e'` | Caracteres adicionais após expressão completa válida |
+| **Memória** | Falha de alocação | N/A (erro do sistema) | `L1:C1: memory allocation failed` | Erro interno de alocação de memória |
 
 ### Dicas de Debug
 
