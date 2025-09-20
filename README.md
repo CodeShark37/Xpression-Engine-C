@@ -43,24 +43,41 @@ O **Xpression Engine** é uma biblioteca em C que permite avaliar expressões en
 - **Arquiteturas:** x86, x86_64, ARM, AArch64
 - **Padrão:** C99+
 
+
+
 ## ✨ Features
 
-| Feature | Status |#|
-|---------|--------|-|
-| Avaliação de expressões | Implementado | ✅ |
-| Funções built-in | 21 funções disponíveis| ✅ |
-| Contexto hierárquico | Suporte completo | ✅ |
-| Export AST (JSON/XML) | Implementado | ✅ |
-| Extensibilidade | API para funções customizadas | ✅ |
-| Zero dependências | Apenas bibliotecas padrão C | ✅ |
+| Categoria | Feature |  Detalhes | Status |#|
+|-----------|---------|--------|-----------|--|
+| **Core** | Avaliação de expressões | Parser robusto com AST | Completo |  ✅ |
+| 🔧 **Funções** | Built-in functions |  Math, Text, Logic, Arrays | **20 funções**  | ✅ |
+| 🌳 **Contexto** | Hierarquia de variáveis  | Suporte a encadeamento profundo | Completo | ✅ |
+| 📊 **Export** | AST (JSON/XML) | Estruturado e agrupado|  Completo | ✅ |
+| 🚀 **Performance** | Zero dependências | Apenas stdlib C| Completo  | ✅ |
+| 🔌 **API** | Extensibilidade | Interface para funções customizadas| Completo  | ✅ |
+| 🛡️ **Robustez** | Error handling | Mensagens detalhadas de erro| **Melhorado**  | ✅ |
+| 📝 **Tipos** | Suporte a tipos | Números, Strings, Booleanos, Arrays | **Expandido** | ✅ |
+| **Usabilidade** | Contexto em tempo real | Definição de contexto via CLI ou ficheiro| **Brevemente**  | 🚀 |
+| 🌐 **Integração** | Conexão com DBs | Definição de contexto via DB MySQL,etc| **Brevemente**  | 🚀 |
 
-### Sintaxe Suportada
 
-- **Identificadores**: `CONFIG`, `SYSTEM`, `USER`
-- **Encadeamento**: `CONFIG.DB.USER` 
-- **Funções**: `SUM(a, b, c)`
-- **Literais**: números (`123`, `-4.56`), strings (`"abc"`, `'xyz'`), booleanos (`true`, `false`),listas (`[1, 2, 'a']`)
-- **Aninhamento**: `SUM(MAX(1,2), MIN(3,4))`
+
+### Sintaxe Rica Suportada
+
+```bash
+# Tipos de dados suportados
+Números:      123, -4.56, 3.14159
+Strings:      "hello", 'world', "text with spaces"
+Booleanos:    true, false
+Arrays:       [1, 2, 3], ["a", "b", "c"], [true, false]
+
+# Estruturas suportadas
+Identificadores:   CONFIG, SYSTEM, USER_DATA
+Encadeamento:     CONFIG.DB.USER.SETTINGS
+Multi-acesso:     OBJ.[prop1, prop2, prop3]
+Funções:          SUM(a, b, c), MAX([1,2,3])
+Aninhamento:      IF(GT(A,B), SUM(A,10), MUL(B,5))
+```
 
 ## Instalação
 
@@ -96,8 +113,20 @@ gcc -o xpression -O2 -s *.c
 # Ver a AST em JSON
 ./xpression -json -eval "${MAX(1, 9, 4)}"
 # Output: AST + Resultado: 9
-```
 
+# Operações lógicas
+./xpression -eval "${IF(GT(10,5), 'yes', 'no')}"
+# → "yes"
+
+# Manipulação de arrays
+./xpression -eval "${MAX([1, 9, 4])}"
+# → 9
+
+# Processamento de texto
+./xpression -eval "${CONCAT('Hello', ' ', 'World')}"
+# → "Hello World"
+
+```
 ### Sintaxe Básica
 
 ```bash
@@ -181,17 +210,17 @@ O sistema possui um contexto hierárquico pré-definido:
 
 ```
 root
-├─ KEYWORD
+🔑 KEYWORD
 │  └─ FUNCTION = "FUNCTION_VALUE"
-├─ CONFIG
-│  └─ DB
-│     └─ USER
+├─ ⚙️ CONFIG
+│  └─ 🗄️ DB
+│     └─ 👤 USER
 │        └─ NAME = "db_user"
-├─ SYSTEM
-│  └─ CONFIG
-│     └─ NETWORK
-│        └─ PROXY
-│           └─ HOST = "10.0.0.1"
+├─ 🖥️ SYSTEM
+│  └─ ⚙️ CONFIG
+│     └─ 🌐 NETWORK
+│        └─ 🛡️ PROXY
+│           └─ HOST = "10.0.0.1
 ├─ IDENTIFIER = "X123"
 ├─ A = 10
 ├─ B = 20
@@ -251,6 +280,40 @@ root
 # 6. Com variáveis de contexto
 ./xpression -eval "${SUM(A, B)}"                     # → 30
 ./xpression -eval "${MIXED(IDENTIFIER, A)}"          # → "X123|10"
+
+# 7. Operações matemáticas complexas
+./xpression -eval "${AVG(MAP([[1,2,3],[4,5,6],[7,8,9]], SUM))}"
+# → 15 (média das somas: [6,15,24] → 15)
+
+# 8. Processamento condicional em cadeia
+./xpression -eval "${IF(CONTAINS(UNIQUE([1,2,2,3,1]), 3), SUM([1,2,3]), MUL([1,2,3]))}"
+# → 6 (contém 3, então soma)
+
+# 9. Análise de strings complexa
+./xpression -eval "${MIXED(UPPERCASE('status'), COUNT(['ok','ok','error','ok'], 'ok'))}"
+# → "STATUS|3"
+
+# 10. Validação de arrays aninhados
+./xpression -eval "${SORT(MAP([[5,2],[8,1],[3,4]], MAX))}"
+# → [4,5,8] (máximo de cada sub-array, depois ordenado)
+
+# 11. Verificar ambiente de produção
+./xpression -eval "${IF(EQ(SYSTEM.ENV, 'prod'), CONFIG.PROD.DB, CONFIG.DEV.DB)}"
+
+# 12. Calcular capacidade de sistema
+./xpression -eval "${MUL(SYSTEM.CPU_CORES, SYSTEM.MEMORY_GB, 0.8)}"
+
+# 13. Validar permissões de usuário
+./xpression -eval "${CONTAINS(USER.ROLES, 'admin')}"
+
+# 14. Calcular score final
+./xpression -eval "${SUM(MUL(PLAYER.KILLS, 100), MUL(PLAYER.ASSISTS, 50), PLAYER.BONUS)}"
+
+# 15. Determinar ranking
+./xpression -eval "${IF(GT(PLAYER.SCORE, 1000), 'EXPERT', IF(GT(PLAYER.SCORE, 500), 'INTERMEDIATE', 'BEGINNER'))}"
+
+# 16. Validar conquista
+./xpression -eval "${IF(AND(GT(PLAYER.LEVEL, 10), CONTAINS(PLAYER.ITEMS, 'rare_sword')), 'achievement_unlocked', 'keep_playing')}"
 ```
 
 ### Exemplos com Export AST
@@ -331,8 +394,9 @@ CtxNode *build_custom_context(void) {
 
 | Categoria | Erro | Exemplo de Entrada | Mensagem de Erro | Descrição |
 |-----------|------|-------------------|------------------|-----------|
-| **#**|Expressão mal formada | `${EQ(1,X)`|`Malformed placeholders` | Verifique `${}` e parênteses |
-| **#**| Sintaxe inválida dentro de `${}` |`${UPPERCASE('test)}` |`Parse Failed` |Verifique caracteres inválidos ou falta de um válido|
+| **Sintaxe**|Expressão mal formada | `${EQ(1,X)`|`Malformed placeholders` | Verifique `${}` e parênteses |
+| **Sintaxe**| Sintaxe inválida dentro de `${}` |`${UPPERCASE('test)}` |`Parse Failed` |Verifique caracteres inválidos ou falta de um válido|
+| **Sintaxe** | Conteúdo extra após expressão | `"func() extra"` | `L1:C8: unexpected content after expression: 'e'` | Caracteres adicionais após expressão completa válida |
 | **EOF Inesperado** | Fim de entrada | `""` (string vazia) | `L1:C1: unexpected EOF` | Entrada terminou inesperadamente |
 | **Caracteres Inválidos** | Caractere não reconhecido | `"user@name"` | `L1:C5: unexpected '@'` | Encontrado caractere que não pode iniciar uma expressão |
 | **Strings** | String não terminada | `"'hello world"` | `L1:C1: unterminated string` | String literal sem aspas de fechamento |
@@ -344,7 +408,6 @@ CtxNode *build_custom_context(void) {
 | **Multi-acesso** | Expressão inválida em multi-acesso | `"obj.[, prop2]"` | `L1:C6: expected expression in multi-access` | Expressão faltando ou inválida dentro de `.[...]` |
 | **Multi-acesso** | Separador inválido em multi-acesso | `"obj.[prop1 prop2]"` | `L1:C12: expected ',' or ']' in multi-access` | Faltam vírgulas entre elementos do multi-acesso |
 | **Propriedades** | Propriedade faltando após ponto | `"obj."` | `L1:C5: expected property after '.'` | Ponto não seguido de propriedade válida |
-| **Sintaxe** | Conteúdo extra após expressão | `"func() extra"` | `L1:C8: unexpected content after expression: 'e'` | Caracteres adicionais após expressão completa válida |
 | **Memória** | Falha de alocação | N/A (erro do sistema) | `L1:C1: memory allocation failed` | Erro interno de alocação de memória |
 
 ### Dicas de Debug
@@ -384,7 +447,9 @@ Encontrou um bug ou tem uma sugestão? [Abra uma issue](https://github.com/CodeS
 ---
 
 <div align="center">
-
+  
+**Se este projeto te ajudou de alguma forma, deixe uma estrela!**  
+  
 **Feito com ❤️ em Angola**
 
 [![Stars](https://img.shields.io/github/stars/CodeShark37/Xpression-Engine-C?style=social)](https://github.com/CodeShark37/Xpression-Engine-C)
