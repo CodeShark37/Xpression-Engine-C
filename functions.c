@@ -142,16 +142,31 @@ static Value *fn_uppercase(Value *this, Value **args, size_t argc) {
 	return r;
 }
 
+// auxiliar: percorre recursivamente listas e atualiza max
+static void collect_max(Value *v, double *m) {
+    if (!v) return;
+
+    if (v->kind == VALUE_NUMBER) {
+        if (v->num > *m) { *m = v->num; }
+    }
+    else if (v->kind == VALUE_LIST) {
+        for (size_t i = 0; i < v->n_items; i++) {
+            collect_max(v->items[i], m);
+        }
+    }
+    
+}
+
 static Value *fn_max(Value *this, Value **args, size_t argc) {
     (void)this; // `this` isn´t used here
-	if (argc==0) return val_num(0);
-    double m = -INFINITY;
-    for (size_t i=0;i<argc;i++) {
-        double v = (args[i]->kind==VALUE_NUMBER) ? args[i]->num : atof(value_to_string(args[i]));
-        if (v > m) m = v;
+	double m = 0.0;
+
+    for (size_t i = 0; i < argc; i++) {
+        collect_max(args[i], &m);
     }
     return val_num(m);
 }
+
 
 static Value *fn_min(Value *this, Value **args, size_t argc) {
     (void)this; // `this` isn´t used here
@@ -347,4 +362,5 @@ void free_funcs(void) {
 	}
     func_registry = NULL;
 }
+
 
