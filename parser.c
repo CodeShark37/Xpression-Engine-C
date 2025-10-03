@@ -17,7 +17,7 @@ static void error(const char *fmt, ...) {
     va_start(args, fmt);
     snprintf(ctx.error_msg, sizeof(ctx.error_msg), "L%d:C%d: ", ctx.line, ctx.col);
     vsnprintf(ctx.error_msg + strlen(ctx.error_msg), sizeof(ctx.error_msg) - strlen(ctx.error_msg), fmt, args);
-    va_end(args);
+    va_end(args); 
 }
 
 static void update_pos() {
@@ -93,7 +93,7 @@ static char *parse_number() {
         while (isdigit(*ctx.pos)) ctx.pos++;
     }
     
-    size_t len = ctx.pos - start;
+    size_t len = ctx.pos - start; 
     char *buf = malloc(len + 1);
     if (!buf) { error("memory allocation failed"); return NULL; }
     memcpy(buf, start, len);
@@ -266,7 +266,12 @@ static Node *parse_access() {
             while (1) {
                 skip_ws();
                 if (expect(']')) break;
-                if (!*ctx.pos) { error("unterminated multi-access"); node_free(multi_list); node_free(obj); return NULL; }
+                if (!*ctx.pos) { 
+					error("unterminated multi-access");
+					node_free(multi_list);
+					node_free(obj); 
+					return NULL;
+				}
                 
                 //char *prop_name = parse_identifier();
 				Node *item = expr();
@@ -302,9 +307,12 @@ static Node *parse_access() {
         if (right->kind == NODE_IDENTIFIER) {
             Node *prop = node_new(NODE_PROPERTY, right->value);
             node_free(right);
-            if (!prop) { error("memory allocation failed"); node_free(obj); return NULL; }
-            node_add(cur, prop);
-            cur = prop;
+            if (!prop) {
+				error("memory allocation failed");
+				node_free(obj); return NULL;
+			}
+				node_add(cur, prop);
+				cur = prop;
         } else {
             node_add(cur, right);
             cur = right;
@@ -319,105 +327,70 @@ static Node *expr() {
     return parse_access();
 }
 
-static void free_nodes(char **nodes) {
+/*static void free_nodes(char **nodes) {
     if (!nodes) return;
     for (char **p = nodes; *p; p++) {
         free(*p);
+		*p = NULL;
     }
     free(nodes);
-}
+	nodes = NULL;
+}*/
 
 // Extract and parse placeholders from text
-PlaceholderResult parse_placeholders(const char *text) {
+char* parse_placeholder(const char **text) {
     
-	PlaceholderResult result = { 
-		.nodes = NULL, 
-		.error_code = 0 
-	};
-
-    if (!text) {
-        result.error_code = -1;
-        return result;
-    }
-
-    size_t cap = 8;
-    size_t count = 0;
-    char **nodes = (char **)malloc(cap * sizeof(char *));
-    
-	if (!nodes) {
-        result.error_code = -1;
-        return result;
-    }
-    nodes[0] = NULL; // Keep NULL for dynamic iteration
-
-    const char *p = text;
-    while (1) {
-        const char *start = strstr(p, "${");
-        if (!start) break;
-        
-        const char *content_start = start + 2;
-        const char *end = content_start;
-        int depth = 0;
-        
-        while (*end) {
-            if (*end == '{') depth++;
-            else if (*end == '}') {
-                if (depth == 0) break;
-                depth--;
-            }
-            end++;
-        }
-        
-        if (!*end) {
-            result.error_code = -1;
-            free_nodes(nodes);
-            return result;
-        }
-
-        size_t content_len = end - content_start;
-        char *content = (char*)malloc(content_len + 1);
-        if (!content) {
-            result.error_code = -1;
-            free_nodes(nodes);
-            return result;
-        }
-        memcpy(content, content_start, content_len);
-        content[content_len] = '\0';
-        
-        // parsing simulation of content
-        int parse_error = 0; // ctx.has_error
-        
-        if (!parse_error) {
-            if (count + 1 >= cap) {
-                cap *= 2;
-                char **tmp = (char **)realloc(nodes, cap * sizeof(char *));
-                if (!tmp) {
-                    result.error_code = -1;
-                    free(content);
-                    free_nodes(nodes);
-                    return result;
-                }
-                nodes = tmp;
-            }
-            nodes[count++] = content;
-            nodes[count] = NULL; //Keep NULL for dynamic iteration
-        } else {
-            fprintf(stderr, "Parse error in placeholder '${%.*s}'\n", (int)content_len, content);
-            free(content);
-        }
-        
-        p = end + 1;
+    if (!text || !*text || !**text) {
+		error("Empty entry");
+        return NULL;
     }
     
-    result.nodes = nodes;
-    return result;
+	const char *start = strstr(*text, "${");
+	if (!*start) {
+		error("No expression found");
+		return NULL;
+	}
+	
+	const char *content_start = start + 2;
+	const char *end = strchr(*text,'}');
+	
+	if (!end) {
+		error("Malformed placeholder '%s'\n",start);
+		return NULL;
+	}
+
+	size_t content_len = end - content_start;
+
+	char *content = (char*)malloc(content_len + 1);
+	if (!content) {
+		error("memory allocation failed");
+		return NULL;
+	}
+	memcpy(content, content_start, content_len);
+	content[content_len] = '\0';
+	
+	
+	*text = end + 1;
+    return content;
 }
 
 // Public API for single expression parsing
-Node *parse_expression_str(const char *source) {
-    if (!source) return NULL;
+Node *parse_expression(const char **source) {
+    if (!source || !*source || !**source) return NULL;
     
-    ctx = (Parser){.src = source, .pos = source, .line = 1, .col = 1, .has_error = 0};
+	//extract expression from ${}
+
+	char* expr_src = parse_placeholder(source);
+
+    if(!expr_src) expr_src = (char*) *source;
+
+	ctx = (Parser){
+		.src  = expr_src,
+		.pos  = expr_src,
+		.line = 1,
+		.col  = 1,
+		.has_error = 0
+	};
     
     Node *result = expr();
 	
@@ -433,9 +406,15 @@ Node *parse_expression_str(const char *source) {
 	
     if (ctx.has_error) {
         fprintf(stderr, "%s\n", ctx.error_msg);
-        if (result) { node_free(result); result = NULL; }
+        if (result) {
+			node_free(result);
+			result = NULL;
+		}
     }
     
+	free(expr_src);
+	expr_src = NULL;
+	
     return result;
 }
 

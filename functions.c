@@ -107,9 +107,9 @@ static Value *fn_contains(Value *this,Value **args,size_t argc){
 	
 	for (int i = 0; i < list->n_items; i++) {
         it = list->items[i];
-        if (val_equals(it, target)) return val_num(1);
+        if (val_equals(it, target)) return val_bool(1);
     }
-    return val_num(0);
+    return val_bool(0);
 }
 
 
@@ -142,6 +142,17 @@ static Value *fn_uppercase(Value *this, Value **args, size_t argc) {
 	return r;
 }
 
+/*static Value *fn_max(Value *this, Value **args, size_t argc) {
+    (void)this; // `this` isn´t used here
+	if (argc==0) return val_num(0);
+    double m = -INFINITY;
+    for (size_t i=0;i<argc;i++) {
+        double v = (args[i]->kind==VALUE_NUMBER) ? args[i]->num : atof(value_to_string(args[i]));
+        if (v > m) m = v;
+    }
+    return val_num(m);
+}*/
+
 // auxiliar: percorre recursivamente listas e atualiza max
 static void collect_max(Value *v, double *m) {
     if (!v) return;
@@ -164,6 +175,7 @@ static Value *fn_max(Value *this, Value **args, size_t argc) {
     for (size_t i = 0; i < argc; i++) {
         collect_max(args[i], &m);
     }
+
     return val_num(m);
 }
 
@@ -178,6 +190,9 @@ static Value *fn_min(Value *this, Value **args, size_t argc) {
     }
     return val_num(m);
 }
+
+
+
 
 static Value *fn_mixed(Value *this, Value **args, size_t argc) {
 	(void)this; // `this` isn´t used here
@@ -206,6 +221,7 @@ static Value *fn_mixed(Value *this, Value **args, size_t argc) {
 
 /* UNIQUE(list) - remove duplicados */
 static Value *fn_unique(Value *this, Value **args, size_t argc) {
+	(void)this; // `this` isn´t used here
     if (argc < 1 || args[0]->kind != VALUE_LIST) return val_null();
 	
     Value *result = val_list();
@@ -222,13 +238,14 @@ static Value *fn_unique(Value *this, Value **args, size_t argc) {
 
 /* MAP(list, fn) - aplica função a cada item da lista */
 static Value *fn_map(Value *this, Value **args, size_t argc) {
+	(void)this; // `this` isn´t used here
     if (argc < 2 || args[0]->kind != VALUE_LIST || args[1]->kind != VALUE_STRING)
         return val_null();
 
     const char *fn_name = args[1]->str;  // função de destino
-    Func cb = find_func_cb(fn_name);
+    Func cb = find_function(fn_name);
     if (!cb) return val_null();
-
+	
     Value *result = val_list();
     for (size_t i = 0; i < args[0]->n_items; i++) {
         Value *single_arg = val_dup(args[0]->items[i]);
@@ -241,6 +258,7 @@ static Value *fn_map(Value *this, Value **args, size_t argc) {
 
 /* AVG(list) - média de valores numéricos */
 static Value *fn_avg(Value *this, Value **args, size_t argc) {
+	(void)this; // `this` isn´t used here
     if (argc < 1 || args[0]->kind != VALUE_LIST) return val_null();
 
     double sum = 0;
@@ -257,6 +275,7 @@ static Value *fn_avg(Value *this, Value **args, size_t argc) {
 
 /* SORT(list) - ordena strings ou números */
 static Value *fn_sort(Value *this, Value **args, size_t argc) {
+	(void)this; // `this` isn´t used here
     if (argc < 1 || args[0]->kind != VALUE_LIST) return val_null();
 
     Value *result = val_list();
@@ -270,6 +289,7 @@ static Value *fn_sort(Value *this, Value **args, size_t argc) {
 
 /* IF(cond, a, b) - retorna a se cond != false/null/0, senão b */
 static Value *fn_if(Value *this, Value **args, size_t argc) {
+	(void)this; // `this` isn´t used here
     if (argc < 3) return val_null();
 
     Value *cond = args[0];
@@ -284,31 +304,37 @@ static Value *fn_if(Value *this, Value **args, size_t argc) {
 /* ==== Funções de comparação ==== */
 
 static Value *fn_eq(Value *this, Value **args, size_t argc) {
+	(void)this; // `this` isn´t used here
     if (argc < 2) return val_bool(0);
     return val_bool(val_compare(args[0], args[1]) == 0);
 }
 
 static Value *fn_neq(Value *this, Value **args, size_t argc) {
+	(void)this; // `this` isn´t used here
     if (argc < 2) return val_bool(0);
     return val_bool(val_compare(args[0], args[1]) != 0);
 }
 
 static Value *fn_gt(Value *this, Value **args, size_t argc) {
+	(void)this; // `this` isn´t used here
     if (argc < 2) return val_bool(0);
     return val_bool(val_compare(args[0], args[1]) > 0);
 }
 
 static Value *fn_lt(Value *this, Value **args, size_t argc) {
+	(void)this; // `this` isn´t used here
     if (argc < 2) return val_bool(0);
     return val_bool(val_compare(args[0], args[1]) < 0);
 }
 
 static Value *fn_gte(Value *this, Value **args, size_t argc) {
+	(void)this; // `this` isn´t used here
     if (argc < 2) return val_bool(0);
     return val_bool(val_compare(args[0], args[1]) >= 0);
 }
 
 static Value *fn_lte(Value *this, Value **args, size_t argc) {
+	(void)this; // `this` isn´t used here
     if (argc < 2) return val_bool(0);
     return val_bool(val_compare(args[0], args[1]) <= 0);
 }
@@ -347,14 +373,14 @@ void register_function(const char *name, Func cb) {
 	func_registry = e;
 }
 
-Func find_func_cb(const char *name) {
+Func find_function(const char *name) {
     for (FuncEntry *e = func_registry; e; e = e->next){ 
 		if (!strcmp(e->name, name)) return e->cb;
 	}
     return NULL;
 }
 
-void free_funcs(void) {
+void free_functions(void) {
     for (FuncEntry *e = func_registry; e; ) {
 		FuncEntry *nx = e->next;
 		free(e->name); e->name=NULL;
@@ -362,5 +388,4 @@ void free_funcs(void) {
 	}
     func_registry = NULL;
 }
-
 

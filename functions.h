@@ -13,8 +13,8 @@ typedef struct FuncEntry {
 
 
 void register_function(const char *name, Func cb);
-Func find_func_cb(const char *name);
-void free_funcs(void);
+Func find_function(const char *name);
+void free_functions(void);
 
 void register_builtins_default(void);
 

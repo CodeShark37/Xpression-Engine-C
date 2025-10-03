@@ -26,8 +26,12 @@ static void print_json_string_esc(const char *s) {
 
 /* recursive JSON-like AST printer */
 static void print_json_node_rec(Node *n, int indent) {
-    indent_print(indent); printf("{\n");
-    indent_print(indent+2); printf("\"type\": ");
+    
+	indent_print(indent);
+	printf("{\n");
+    indent_print(indent+2);
+	printf("\"type\": ");
+
     switch (n->kind) {
         case NODE_OBJECT: printf("\"object\""); break;
         case NODE_PROPERTY: printf("\"property\""); break;
@@ -39,36 +43,43 @@ static void print_json_node_rec(Node *n, int indent) {
         case NODE_IDENTIFIER: printf("\"identifier\""); break;
     }
     if (n->value) {
-        printf(",\n"); indent_print(indent+2); printf("\"value\": ");
+        printf(",\n"); 
+		indent_print(indent+2);
+		printf("\"value\": ");
         print_json_string_esc(n->value);
     }
     if (n->n_children) {
-        printf(",\n"); indent_print(indent+2); printf("\"children\": [\n");
+        printf(",\n");
+		indent_print(indent+2);
+		printf("\"children\": [\n");
         for (size_t i=0;i<n->n_children;i++) {
             print_json_node_rec(n->children[i], indent+4);
             if (i+1 < n->n_children) printf(",\n");
 			else putchar('\n');
         }
-        indent_print(indent+2); putchar(']');
+        indent_print(indent+2);
+		putchar(']');
     }
-    putchar('\n'); indent_print(indent); putchar('}');
+    putchar('\n');
+	indent_print(indent);
+	putchar('}');
 }
 
-void print_json(Node *n, Value *v, int grouped) {
-    //(void)grouped;
+void print_json(Node *n, Value *v, int grouped,int is_last) {
+   
 	int indent = 0;
     if (grouped) {
 		indent = 2; 
 	}
 	print_json_node_rec(n, indent);
 
+    printf((grouped && !is_last)?",\n":"\n");
     if (v) {
-        putchar('\n');
         char *s = value_to_string(v);
 		indent_print(indent);
-        printf("EVALUATED: ");
+        printf("\"EVALUATED\": ");
         print_json_string_esc(s);
-	    putchar('\n');
+	    printf((grouped && !is_last)?",\n":"\n");
 
         free(s);
 		s = NULL;

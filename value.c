@@ -52,6 +52,7 @@ void val_free(Value *v) {
 				free(v->str);
 				v->str = NULL;
 			}
+			break;
 			
 		case VALUE_LIST:
 			if(v->items){
@@ -61,6 +62,10 @@ void val_free(Value *v) {
 				free(v->items);
 				v->items=NULL;
 			}
+			break;
+			
+		default:
+			break;
 			
 	}
     
@@ -86,8 +91,8 @@ Value *val_dup(const Value *src) {
     return val_null();
 }
 
-static int val_list_equals(Value *v1,Value *v2){
-	int res = 0;
+static unsigned int val_list_equals(Value *v1,Value *v2){
+	unsigned int res = 0;
 	if(v1->n_items == v2->n_items){
 		for(int i=0;v1->n_items;i++){
 			res += val_equals(v1->items[i],v2->items[i]);

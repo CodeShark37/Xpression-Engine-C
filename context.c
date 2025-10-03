@@ -23,14 +23,14 @@ void ctx_set_prop(CtxNode *n, const char *key, Value *v) {
 
 Value *ctx_get_prop(CtxNode *n, const char *key) {
     for (PropKV *k = n->props; k; k = k->next) {
-		if (strcmp(k->key, key) == 0) return k->val;
+		if (!strcmp(k->key, key)) return k->val;
 	}
     return NULL;
 }
 
 CtxNode *ctx_find_child(CtxNode *n, const char *name) {
     for (size_t i=0;i<n->n_children;i++){ 
-		if (strcmp(n->children[i]->name,name) == 0) 
+		if (!strcmp(n->children[i]->name,name)) 
 			return n->children[i];
 	}
     return NULL;

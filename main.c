@@ -49,15 +49,14 @@ static CtxNode *build_sample_context(void) {
 
 
 int main(int argc, char **argv) {
-    CLIOptions opts = parse_cli(argc, argv);
-	    
-	if (!opts.expr) return 1;
-    
+
 	register_builtins_default();
 	CtxNode *ctx = build_sample_context();
-    process_expressions(&opts, ctx);
-    
+
+	process_cli(argc,argv,ctx); 
+	
 	ctx_free(ctx);
-	free_funcs();
+	free_functions();
+	
     return 0;
 }
