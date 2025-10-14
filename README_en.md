@@ -141,21 +141,6 @@ gcc -o xpression -O2 -s *.c
 | `-group` or `-g` | Grouped AST | `./xpression -json -g "${SUM(1,2)}"` |
 | `-f file` | Reads expression from file | `./xpression -eval -f input.txt` |
 
-### Command Examples
-
-```bash
-# Simple evaluation
-./xpression -eval "${SUM(10, 20, 30)}"          # → 60
-
-# With context
-./xpression -eval "${CONFIG.DB.USER}"           # → "db_user"
-
-# AST in JSON
-./xpression -json "${UPPERCASE('hello')}"       # → AST + "HELLO"
-
-# Nested functions
-./xpression -eval "${MAX(SUM(1,2), MIN(5,3))}"  # → 3
-```
 
 ## 🔧 Built-in Functions
 
