@@ -145,21 +145,6 @@ gcc -o xpression -O2 -s *.c
 | `-group` ou `-g` | AST agrupada | `./xpression -json -g "${SUM(1,2)}"` |
 | `-f arquivo` | Lê expressão de arquivo | `./xpression -eval -f input.txt` |
 
-### Exemplos de Comandos
-
-```bash
-# Avaliação simples
-./xpression -eval "${SUM(10, 20, 30)}"          # → 60
-
-# Com contexto
-./xpression -eval "${CONFIG.DB.USER}"           # → "db_user"
-
-# AST em JSON
-./xpression -json "${UPPERCASE('hello')}"       # → AST + "HELLO"
-
-# Funções aninhadas
-./xpression -eval "${MAX(SUM(1,2), MIN(5,3))}"  # → 3
-```
 
 ## 🔧 Funções Built-in
 
@@ -167,8 +152,8 @@ gcc -o xpression -O2 -s *.c
 
 | Função | Descrição | Exemplo | Resultado |
 |--------|-----------|---------|-----------|
-| `SUM(...)` | Soma todos os argumentos | `MUL([5, 2, 8, 1],4)` | `320` |
-| `MUL(...)` | Multiplica todos os argumentos | `AVG([5, 2, 8, 1])` | `4` |
+| `SUM(...)` | Soma todos os argumentos | `SUM(5, 2, 8, 1, 4)` | `20` |
+| `MUL(...)` | Multiplica todos os argumentos | `MUL([5, 2, 8, 1],4)` | `320` |
 | `MAX(...)` | Retorna o maior valor | `MAX(5, 2, 8, 1)` | `8` |
 | `MIN(...)` | Retorna o menor valor | `MIN(5, 2, 8, 1)` | `1` |
 | `AVG(...)` | Calcula a média dos valores | `AVG([5, 2, 8, 1])` | `4` |
