@@ -3,6 +3,7 @@
 #include "printer.h"
 #include "evaluator.h"
 #include "value.h"
+#include "error.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,14 +58,19 @@ static void print_plain_result(Value *result, const CLIContext *ctx,int is_last)
 
 static void print_error(CLIContext *ctx, const char *extra_context) {
 
-	if (ctx->opts.json) {
-		fprintf(stderr,"// %s",ctx->error);
+    if (ctx->opts.json) {
+        fprintf(stderr,"{\"error\": ");
+        fprintf(stderr,"\"%s\"", ctx->error);
+        if (extra_context && *extra_context) {
+            fprintf(stderr, ", \"context\": \"%s\"", extra_context);
+        }
+        fprintf(stderr, "}\n");
 	} else if (ctx->opts.xml) {
 		fprintf(stderr,"  <!-- %s: %s -->\n", ctx->error, extra_context ? extra_context : "");
 	} else {
 		fprintf(stderr, "Error: %s%c", ctx->error,(!extra_context)?'\n':' ');
 		if (extra_context) {
-			fprintf(stderr, ": %s\n", extra_context);
+            fprintf(stderr, "%s\n", extra_context);
 		}
 	}
 }
@@ -103,7 +109,7 @@ static char *read_file(const char *filename) {
     long size = ftell(f);
     rewind(f);
 
-    char *content = malloc(size + 1);
+    char *content = xpr_malloc(size + 1);
     if (!content) {
         fclose(f);
         return NULL;
@@ -165,10 +171,7 @@ static int transition(CLIContext *ctx, TokenType tok, char **argv, int argc) {
             break;
 
         case TOK_GROUP:
-			/*if (ctx->arg_pos + 1 >= argc) {
-                set_error(ctx, ERR_NO_EXPRESSION, NULL);
-                return 0;
-            }*/
+            /* group flag does not consume additional args */
             ctx->opts.group = 1;
             ctx->state = next_state;
             ctx->arg_pos++;
@@ -191,9 +194,8 @@ static int transition(CLIContext *ctx, TokenType tok, char **argv, int argc) {
             ctx->arg_pos += 2;
             break;
 
-		case TOK_UNKNOWN:
+        case TOK_UNKNOWN:
         case TOK_EXPR:
-			puts("EXPR");
             if (!argv[ctx->arg_pos] || !*argv[ctx->arg_pos]) {
                 set_error(ctx, ERR_PROCESS_EXPRESSION, NULL);
                 return 0;
@@ -219,9 +221,11 @@ static int process_expressions(CLIContext *ctx, CtxNode *eval_ctx) {
 			print_group_boundary(&ctx->opts, 0);
 			return 0;
 		}
-		//look ahead to get the last node 
-		const char* tmp = strdup(p);
-		int is_last = !(parse_expression(&tmp));
+        // look ahead to detect if this is the last node
+        char *tmp = xpr_strdup(p);
+        const char *tmp_ro = tmp;
+        int is_last = !(parse_expression(&tmp_ro));
+        free(tmp);
 		
 		Value *result = (ctx->opts.eval && eval_ctx) ? eval_node(ast, eval_ctx) : NULL;
 
@@ -244,7 +248,7 @@ static int process_expressions(CLIContext *ctx, CtxNode *eval_ctx) {
 static int validate_ctx(CLIContext *ctx) {
 
     if (!ctx->opts.expr || !*ctx->opts.expr) {
-        set_error(ctx, ERR_MISSING_FILENAME, NULL);
+        set_error(ctx, ERR_NO_EXPRESSION, NULL);
         return 0;
     }
 
@@ -297,7 +301,7 @@ int process_cli(int argc, char **argv, CtxNode *eval_ctx) {
 		return 0;
 	}
 	
-	if (ctx.opts.expr && ctx.opts.filename) {
+    if (ctx.opts.expr && ctx.opts.filename) {
         free(ctx.opts.expr);
     }
 

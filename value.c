@@ -2,37 +2,38 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "error.h"
 
 
 Value *val_null(void) { 
-	Value *v=calloc(1,sizeof(Value));
+    Value *v=xpr_calloc(1,sizeof(Value));
 	v->kind=VALUE_NULL;
 	return v;
 }
 
 Value *val_str(const char *s) {
-	Value *v=calloc(1,sizeof(Value));
+    Value *v=xpr_calloc(1,sizeof(Value));
 	v->kind=VALUE_STRING;
-	v->str=strdup(s);
+    v->str=xpr_strdup(s ? s : "");
 	return v; 
 }
 
 Value *val_num(double x) {
-	Value *v=calloc(1,sizeof(Value));
+    Value *v=xpr_calloc(1,sizeof(Value));
 	v->kind=VALUE_NUMBER;
 	v->num=x;
 	return v;
 }
 
 Value *val_bool(unsigned int b) {
-	Value *v=calloc(1,sizeof(Value));
+    Value *v=xpr_calloc(1,sizeof(Value));
 	v->kind=VALUE_BOOL;
 	v->num= b ? 1:0;
 	return v;
 }
 
 Value *val_list(void) {
-	Value *v=calloc(1,sizeof(Value));
+    Value *v=xpr_calloc(1,sizeof(Value));
 	v->kind=VALUE_LIST;
 	v->items=NULL;
 	v->n_items=0;
@@ -40,7 +41,10 @@ Value *val_list(void) {
 }
 
 void val_list_append(Value *L, Value *it) {
-	L->items = realloc(L->items, sizeof(Value*)*(L->n_items+1));L->items[L->n_items++] = it;
+    Value **new_items = xpr_realloc(L->items, sizeof(Value*)*(L->n_items+1));
+    if (!new_items) { xpr_error_set(XPR_ERR_MEMORY, "failed to grow list items"); return; }
+    L->items = new_items;
+    L->items[L->n_items++] = it;
 }
 
 void val_free(Value *v) {
@@ -92,14 +96,11 @@ Value *val_dup(const Value *src) {
 }
 
 static unsigned int val_list_equals(Value *v1,Value *v2){
-	unsigned int res = 0;
-	if(v1->n_items == v2->n_items){
-		for(int i=0;v1->n_items;i++){
-			res += val_equals(v1->items[i],v2->items[i]);
-		}
-		return (res == v1->n_items)?1:0;
-	}
-	return res;
+    if (v1->n_items != v2->n_items) return 0;
+    for(size_t i=0;i<v1->n_items;i++){
+        if(!val_equals(v1->items[i], v2->items[i])) return 0;
+    }
+    return 1;
 }
 
 int val_equals(Value *v1,Value *v2){
@@ -161,8 +162,11 @@ int val_compare(const Value *a, const Value *b) {
             return (a->num == b->num) ? 0 : (a->num < b->num ? -1 : 1);
         case VALUE_NUMBER:
             return (a->num == b->num) ? 0 : (a->num < b->num ? -1 : 1);
-        case VALUE_STRING:
-            return strcmp(a->str ? a->str : NULL, b->str ? b->str : NULL);
+        case VALUE_STRING: {
+            const char *as = a->str ? a->str : "";
+            const char *bs = b->str ? b->str : "";
+            return strcmp(as, bs);
+        }
         case VALUE_LIST:
             if (a->n_items != b->n_items)
                 return (a->n_items < b->n_items) ? -1 : 1;
@@ -178,19 +182,19 @@ int val_compare(const Value *a, const Value *b) {
 
 
 char *value_to_string(const Value *v) {
-    if (!v) return strdup("null");
+    if (!v) return xpr_strdup("null");
     switch (v->kind) {
-        case VALUE_NULL: return strdup("null");
-        case VALUE_STRING:  return strdup(v->str ? v->str : "");
-        case VALUE_BOOL: return strdup(v->num ? "true" : "false");
+        case VALUE_NULL: return xpr_strdup("null");
+        case VALUE_STRING:  return xpr_strdup(v->str ? v->str : "");
+        case VALUE_BOOL: return xpr_strdup(v->num ? "true" : "false");
         case VALUE_NUMBER: {
             char tmp[64];
             snprintf(tmp, sizeof(tmp), "%g", v->num);
-            return strdup(tmp);
+            return xpr_strdup(tmp);
         }
         case VALUE_LIST: {
             size_t cap = 128;
-            char *out = malloc(cap);
+            char *out = xpr_malloc(cap);
             size_t pos = 0;
             out[pos++] = '[';
             for (size_t i = 0; i < v->n_items; i++) {
@@ -198,7 +202,9 @@ char *value_to_string(const Value *v) {
                 size_t L = strlen(it);
                 if (pos + L + 4 > cap) {
                     cap = (pos + L + 4) * 2;
-                    out = realloc(out, cap);
+                    char *tmp = xpr_realloc(out, cap);
+                    if (!tmp) { free(it); free(out); return xpr_strdup("null"); }
+                    out = tmp;
                 }
                 memcpy(out + pos, it, L);
                 pos += L;
@@ -210,5 +216,5 @@ char *value_to_string(const Value *v) {
             return out;
         }
     }
-    return strdup("null");
+    return xpr_strdup("null");
 }
