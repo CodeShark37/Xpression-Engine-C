@@ -3,6 +3,7 @@
 #include "functions.h"
 #include "context.h"
 #include "cli.h"
+#include "error.h"
 
 
 static CtxNode *build_sample_context(void) {
@@ -58,5 +59,9 @@ int main(int argc, char **argv) {
 	ctx_free(ctx);
 	free_functions();
 	
+    if (xpr_error_occurred()) {
+        fprintf(stderr, "fatal: %s\n", xpr_error_message());
+        return 1;
+    }
     return 0;
 }

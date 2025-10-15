@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
+#include "error.h"
 
 
 static FuncEntry *func_registry = NULL;
@@ -13,9 +14,9 @@ static FuncEntry *func_registry = NULL;
 static Value *fn_sum(Value *this,Value **args ,size_t argc) {
 	(void)this; // `this` isn´t used here
     double total = 0;
-    for (int i = 0; i < argc; i++) {
+    for (size_t i = 0; i < argc; i++) {
         if (args[i]->kind == VALUE_LIST) {
-            for (int j = 0; j < args[i]->n_items; j++) {
+            for (size_t j = 0; j < args[i]->n_items; j++) {
                 if (args[i]->items[j]->kind == VALUE_NUMBER) {
                     total += args[i]->items[j]->num;
                 }
@@ -31,9 +32,9 @@ static Value *fn_sum(Value *this,Value **args ,size_t argc) {
 static Value *fn_mul(Value *this,Value **args, size_t argc) {
 	(void)this; // `this` isn´t used here
     double total = 1;
-    for (int i = 0; i < argc; i++) {
+    for (size_t i = 0; i < argc; i++) {
         if (args[i]->kind == VALUE_LIST) {
-            for (int j = 0; j < args[i]->n_items; j++) {
+            for (size_t j = 0; j < args[i]->n_items; j++) {
                 if (args[i]->items[j]->kind == VALUE_NUMBER) {
                     total *= args[i]->items[j]->num;
                 }
@@ -82,7 +83,7 @@ static Value *fn_concat(Value *this, Value **args, size_t argc) {
         total_len += concat_measure(args[i]);
     }
 
-    char *buf = malloc(total_len + 1);
+    char *buf = xpr_malloc(total_len + 1);
     if (!buf) return val_null();
     buf[0] = '\0';
 
@@ -105,7 +106,7 @@ static Value *fn_contains(Value *this,Value **args,size_t argc){
     
     Value *it = NULL;
 	
-	for (int i = 0; i < list->n_items; i++) {
+    for (size_t i = 0; i < list->n_items; i++) {
         it = list->items[i];
         if (val_equals(it, target)) return val_bool(1);
     }
@@ -124,7 +125,7 @@ static Value *fn_count(Value *this,Value **args, size_t argc) {
     Value *list = args[0];
     Value *target = args[1];
 
-    for (int i = 0; i < list->n_items; i++) {
+    for (size_t i = 0; i < list->n_items; i++) {
         Value *item = list->items[i];
         if(val_equals(item,target)){count++;}
     }
@@ -154,15 +155,15 @@ static Value *fn_uppercase(Value *this, Value **args, size_t argc) {
 }*/
 
 // auxiliar: percorre recursivamente listas e atualiza max
-static void collect_max(Value *v, double *m) {
+static void collect_max(Value *v, double *m, int *found) {
     if (!v) return;
 
     if (v->kind == VALUE_NUMBER) {
-        if (v->num > *m) { *m = v->num; }
+        if (!*found || v->num > *m) { *m = v->num; *found = 1; }
     }
     else if (v->kind == VALUE_LIST) {
         for (size_t i = 0; i < v->n_items; i++) {
-            collect_max(v->items[i], m);
+            collect_max(v->items[i], m, found);
         }
     }
     
@@ -170,24 +171,36 @@ static void collect_max(Value *v, double *m) {
 
 static Value *fn_max(Value *this, Value **args, size_t argc) {
     (void)this; // `this` isn´t used here
-	double m = 0.0;
+    double m = 0.0;
+    int found = 0;
 
     for (size_t i = 0; i < argc; i++) {
-        collect_max(args[i], &m);
+        collect_max(args[i], &m, &found);
     }
 
+    if (!found) return val_null();
     return val_num(m);
 }
 
 
+static void collect_min(Value *v, double *m, int *found) {
+    if (!v) return;
+    if (v->kind == VALUE_NUMBER) {
+        if (!*found || v->num < *m) { *m = v->num; *found = 1; }
+    } else if (v->kind == VALUE_LIST) {
+        for (size_t i = 0; i < v->n_items; i++) collect_min(v->items[i], m, found);
+    }
+}
+
 static Value *fn_min(Value *this, Value **args, size_t argc) {
     (void)this; // `this` isn´t used here
-	if (argc==0) return val_num(0);
-    double m = INFINITY;
+    if (argc==0) return val_null();
+    double m = 0.0;
+    int found = 0;
     for (size_t i=0;i<argc;i++) {
-        double v = (args[i]->kind==VALUE_NUMBER) ? args[i]->num : atof(value_to_string(args[i]));
-        if (v < m) m = v;
+        collect_min(args[i], &m, &found);
     }
+    if (!found) return val_null();
     return val_num(m);
 }
 
@@ -197,7 +210,7 @@ static Value *fn_min(Value *this, Value **args, size_t argc) {
 static Value *fn_mixed(Value *this, Value **args, size_t argc) {
 	(void)this; // `this` isn´t used here
     size_t cap=128;
-	char *buf=malloc(cap);
+    char *buf=xpr_malloc(cap);
 	size_t pos=0;
 	buf[0]=0;
 	
@@ -206,7 +219,9 @@ static Value *fn_mixed(Value *this, Value **args, size_t argc) {
         size_t L = strlen(s);
         if (pos + L + 2 >= cap) {
 			cap = (pos+L+32)*2;
-			buf = realloc(buf, cap);
+            char *tmp = xpr_realloc(buf, cap);
+            if (!tmp) { free(buf); return val_null(); }
+            buf = tmp;
 		}
         memcpy(buf+pos, s, L); pos += L; buf[pos] = 0;
         if (i+1 < argc) buf[pos++]='|';
@@ -366,8 +381,9 @@ void register_builtins_default(void) {
 }
 
 void register_function(const char *name, Func cb) {
-    FuncEntry *e = malloc(sizeof(FuncEntry));
-	e->name = strdup(name);
+    FuncEntry *e = xpr_malloc(sizeof(FuncEntry));
+    if (!e) return;
+    e->name = xpr_strdup(name);
 	e->cb = cb;
 	e->next = func_registry;
 	func_registry = e;
