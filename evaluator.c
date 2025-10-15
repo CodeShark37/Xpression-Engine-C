@@ -3,7 +3,6 @@
 #include "value.h"
 #include <stdlib.h>
 #include <string.h>
-#include "error.h"
 
 static Value *resolve_chain(Node *n, CtxNode *root);
 
@@ -36,7 +35,7 @@ static Value *resolve_property(Node *child, CtxNode **pcurctx, CtxNode *root, Va
 
 static Value *resolve_function(Node *child, CtxNode *root, Value *current_val) {
     size_t na = child->n_children;
-    Value **argv = xpr_calloc(na, sizeof(Value*));
+    Value **argv = calloc(na, sizeof(Value*));
     for (size_t a = 0; a < na; a++) {
         argv[a] = eval_node(child->children[a], root);
     }
@@ -134,14 +133,12 @@ Value *eval_node(Node *n, CtxNode *ctx) {
         case NODE_NUMBER:
             return val_num(n->value ? atof(n->value) : 0.0);
 		
-        case NODE_BOOL: {
-            int is_true = (n->value && (n->value[0]=='t' || n->value[0]=='T'));
-            return val_bool(is_true);
-        }
+		case NODE_BOOL:
+			return val_bool(!strcasecmp(n->value, "true"));
       
         case NODE_FUNCTION: {
             size_t na = n->n_children;
-            Value **argv = xpr_calloc(na, sizeof(Value*));
+            Value **argv = calloc(na, sizeof(Value*));
             for (size_t i = 0; i < na; i++) {
                 /* For top-level function calls we evaluate args in ctx (root caller's context) */
                 argv[i] = eval_node(n->children[i], ctx);

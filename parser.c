@@ -4,7 +4,6 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include "error.h"
 
 
 static Parser ctx = {0};
@@ -19,7 +18,6 @@ static void error(const char *fmt, ...) {
     snprintf(ctx.error_msg, sizeof(ctx.error_msg), "L%d:C%d: ", ctx.line, ctx.col);
     vsnprintf(ctx.error_msg + strlen(ctx.error_msg), sizeof(ctx.error_msg) - strlen(ctx.error_msg), fmt, args);
     va_end(args); 
-    xpr_error_set(XPR_ERR_PARSE, "%s", ctx.error_msg);
 }
 
 static void update_pos() {
@@ -28,16 +26,6 @@ static void update_pos() {
         if (*p == '\n') { ctx.line++; ctx.col = 1; }
         else ctx.col++;
     }
-}
-
-static int str_ieq(const char *a, const char *b) {
-    if (!a || !b) return 0;
-    while (*a && *b) {
-        char ca = (char)tolower((unsigned char)*a++);
-        char cb = (char)tolower((unsigned char)*b++);
-        if (ca != cb) return 0;
-    }
-    return *a == '\0' && *b == '\0';
 }
 
 // Parsing utilities
@@ -72,7 +60,7 @@ static char *parse_string() {
     if (!*ctx.pos) { error("unterminated string"); return NULL; }
     
     size_t len = ctx.pos - start;
-    char *buf = xpr_malloc(len + 1); char *w = buf;
+    char *buf = malloc(len + 1), *w = buf;
     if (!buf) { error("memory allocation failed"); return NULL; }
     
     for (const char *r = start; r < ctx.pos; r++) {
@@ -106,7 +94,7 @@ static char *parse_number() {
     }
     
     size_t len = ctx.pos - start; 
-    char *buf = xpr_malloc(len + 1);
+    char *buf = malloc(len + 1);
     if (!buf) { error("memory allocation failed"); return NULL; }
     memcpy(buf, start, len);
     buf[len] = 0;
@@ -123,7 +111,7 @@ static char *parse_identifier() {
     while (is_identifier(*ctx.pos)) ctx.pos++;
     
     size_t len = ctx.pos - start;
-    char *buf = xpr_malloc(len + 1);
+    char *buf = malloc(len + 1);
     if (!buf) { error("memory allocation failed"); return NULL; }
     memcpy(buf, start, len);
     buf[len] = 0;
@@ -197,7 +185,7 @@ static Node *primary() {
     if (!id) { error("unexpected '%c'", *ctx.pos); return NULL; }
     
     // Boolean check
-    if (str_ieq(id, "true") || str_ieq(id, "false")) {
+    if (!strcasecmp(id, "true") || !strcasecmp(id, "false")) {
         Node *n = node_new(NODE_BOOL, id);
         free(id);
         return n;
@@ -285,9 +273,10 @@ static Node *parse_access() {
 					return NULL;
 				}
                 
-                Node *item = expr();
+                //char *prop_name = parse_identifier();
+				Node *item = expr();
                 if (!item) {
-                    error("expected expression in multi-access");
+                    error("expected expression name in multi-access");
                     node_free(multi_list); 
                     node_free(obj);
                     return NULL;
@@ -352,27 +341,27 @@ static Node *expr() {
 char* parse_placeholder(const char **text) {
     
     if (!text || !*text || !**text) {
-        error("empty input");
+		error("Empty entry");
         return NULL;
     }
     
-    const char *start = strstr(*text, "${");
-    if (!start) {
-        error("no expression found");
-        return NULL;
-    }
+	const char *start = strstr(*text, "${");
+	if (!*start) {
+		error("No expression found");
+		return NULL;
+	}
 	
 	const char *content_start = start + 2;
-    const char *end = strchr(start,'}');
+	const char *end = strchr(*text,'}');
 	
 	if (!end) {
-        error("malformed placeholder");
+		error("Malformed placeholder '%s'\n",start);
 		return NULL;
 	}
 
 	size_t content_len = end - content_start;
 
-    char *content = (char*)xpr_malloc(content_len + 1);
+	char *content = (char*)malloc(content_len + 1);
 	if (!content) {
 		error("memory allocation failed");
 		return NULL;
@@ -391,9 +380,9 @@ Node *parse_expression(const char **source) {
     
 	//extract expression from ${}
 
-    char* expr_src = parse_placeholder(source);
-    int extracted = 1;
-    if(!expr_src) { expr_src = (char*) *source; extracted = 0; }
+	char* expr_src = parse_placeholder(source);
+
+    if(!expr_src) expr_src = (char*) *source;
 
 	ctx = (Parser){
 		.src  = expr_src,
@@ -423,10 +412,8 @@ Node *parse_expression(const char **source) {
 		}
     }
     
-    if (extracted) {
-        free(expr_src);
-    }
-    expr_src = NULL;
+	free(expr_src);
+	expr_src = NULL;
 	
     return result;
 }

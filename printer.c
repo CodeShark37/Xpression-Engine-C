@@ -72,18 +72,14 @@ void print_json(Node *n, Value *v, int grouped,int is_last) {
 		indent = 2; 
 	}
 	print_json_node_rec(n, indent);
-    if (grouped) {
-        if (v || !is_last) printf(",\n"); else printf("\n");
-    } else {
-        printf("\n");
-    }
+
+    printf((grouped && !is_last)?",\n":"\n");
     if (v) {
         char *s = value_to_string(v);
-        indent_print(indent);
-        printf("{\"evaluated\": ");
+		indent_print(indent);
+        printf("\"EVALUATED\": ");
         print_json_string_esc(s);
-        printf("}");
-        if (grouped && !is_last) printf(",\n"); else printf("\n");
+	    printf((grouped && !is_last)?",\n":"\n");
 
         free(s);
 		s = NULL;
