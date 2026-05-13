@@ -17,24 +17,24 @@ Português | [English](README_en.md)
 
 </div>
 
-# 🚀 Xpression Engine
+# Xpression Engine
 
 > Um motor modular de avaliação de expressões em C com suporte a funções built-in, variáveis de contexto e export da AST em JSON/XML.
 
-## 📋 Índice
+## Índice
 
-- 🎯 O que é o Xpression Engine?
-- ✨ Features
--  Instalação
-- 🚀 Início Rápido
-- 📖 Guia de Uso
-- 🔧 Funções Built-in
-- 🌳 Variáveis de Contexto
-- 💡 Exemplos Práticos
+- O que é o Xpression Engine?
+- Features
+- Instalação
+- Início Rápido
+- Guia de Uso
+- Funções Built-in
+- Variáveis de Contexto
+- Exemplos Práticos
 - Extensibilidade
 - Contribuição
 
-## 🎯 O que é o Xpression Engine?
+##  O que é o Xpression Engine?
 
 O **Xpression Engine** é uma biblioteca em C que permite avaliar expressões encapsuladas no formato `${EXPRESSION}`. É perfeito para sistemas que precisam de processamento dinâmico de configurações, templates ou cálculos em tempo de execução.
 
@@ -45,7 +45,7 @@ O **Xpression Engine** é uma biblioteca em C que permite avaliar expressões en
 
 
 
-## ✨ Features
+##  Features
 
 | Categoria | Feature |  Detalhes | Status |#|
 |-----------|---------|--------|-----------|--|
@@ -59,8 +59,6 @@ O **Xpression Engine** é uma biblioteca em C que permite avaliar expressões en
 | 📝 **Tipos** | Suporte a tipos | Números, Strings, Booleanos, Arrays | **Expandido** | ✅ |
 | **Usabilidade** | Contexto em tempo real | Definição de contexto via CLI ou ficheiro| **Brevemente**  | 🚀 |
 | 🌐 **Integração** | Conexão com DBs | Definição de contexto via DB MySQL,etc| **Brevemente**  | 🚀 |
-
-
 
 ### Sintaxe Rica Suportada
 
@@ -96,44 +94,15 @@ cd Xpression-Engine-C
 
 # Compile
 gcc -o xpression -O2 -s *.c
-
-# Execute
-./xpression
 ```
 
-## 🚀 Início Rápido
-
-### Seu Primeiro Comando
-
-```bash
-# Avaliar uma soma simples
-./xpression -eval "${SUM(10, 20, 5)}"
-# Output: 35
-
-# Ver a AST em JSON
-./xpression -json -eval "${MAX(1, 9, 4)}"
-# Output: AST + Resultado: 9
-
-# Operações lógicas
-./xpression -eval "${IF(GT(10,5), 'yes', 'no')}"
-# → "yes"
-
-# Manipulação de arrays
-./xpression -eval "${MAX([1, 9, 4])}"
-# → 9
-
-# Processamento de texto
-./xpression -eval "${CONCAT('Hello', ' ', 'World')}"
-# → "Hello World"
-
-```
 ### Sintaxe Básica
 
 ```bash
 ./xpression [opções] "${EXPRESSION}"
 ```
 
-## 📖 Guia de Uso
+## Guia de Uso
 
 ### Opções Disponíveis
 
@@ -146,7 +115,7 @@ gcc -o xpression -O2 -s *.c
 | `-f arquivo` | Lê expressão de arquivo | `./xpression -eval -f input.txt` |
 
 
-## 🔧 Funções Built-in
+## Funções Built-in
 
 ### Matemáticas
 
@@ -189,7 +158,7 @@ gcc -o xpression -O2 -s *.c
 | `SORT([...])` | Ordena o Array | `SORT(UNIQUE([1,2,34,4,3,432,22,2,3,1]))` | `[1,2,3,4,22,34,432]` |
 | `UNIQUE([...])` | Gera o Array sem elem repetidos | `UNIQUE([1,2,34,4,3,432,22,2,3,1])` | `1,2,34,4,3,432,22]` |
 
-## 🌳 Variáveis de Contexto
+## Variáveis de Contexto
 
 O sistema possui um contexto hierárquico pré-definido:
 
@@ -372,7 +341,7 @@ CtxNode *build_custom_context(void) {
 }
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Problemas Comuns
 
@@ -399,7 +368,7 @@ CtxNode *build_custom_context(void) {
 
 ```bash
 # Ver AST para debug
-./xpression -json "${SUA_EXPRESSAO}"
+./xpression -json "${EXPRESSAO}"
 
 # Testar passo a passo
 ./xpression -eval "${SUM(1,2)}"     # Teste básico
