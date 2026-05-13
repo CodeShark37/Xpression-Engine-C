@@ -17,24 +17,24 @@ English | [Português](README.md)
 
 </div>
 
-# 🚀 Xpression Engine
+# Xpression Engine
 
 > A modular expression evaluation engine in C with built-in functions, context variables, and AST export in JSON/XML.
 
-## 📋 Table of Contents
+## Table of Contents
 
-- 🎯 What is Xpression Engine?
-- ✨ Features
-- 🛠️ Installation
-- 🚀 Quick Start
-- 📖 Usage Guide
-- 🔧 Built-in Functions
-- 🌳 Context Variables
-- 💡 Practical Examples
-- 🧩 Extensibility
-- 🤝 Contributing
+- What is Xpression Engine?
+- Features
+- Installation
+- Quick Start
+- Usage Guide
+- Built-in Functions
+- Context Variables
+- Practical Examples
+- Extensibility
+- Contributing
 
-## 🎯 What is Xpression Engine?
+## What is Xpression Engine?
 
 **Xpression Engine** is a C library that allows evaluating expressions encapsulated in the `${EXPRESSION}` format. It's perfect for systems that need dynamic processing of configurations, templates, or runtime calculations.
 
@@ -43,7 +43,7 @@ English | [Português](README.md)
 - **Architectures:** x86, x86_64, ARM, AArch64
 - **Standard:** C99+
 
-## ✨ Features
+## Features
 
 | Category | Feature | Details | Status |#|
 |----------|---------|---------|--------|--|
@@ -75,7 +75,7 @@ Functions:    SUM(a, b, c), MAX([1,2,3])
 Nesting:      IF(GT(A,B), SUM(A,10), MUL(B,5))
 ```
 
-## 🛠️ Installation
+## Installation
 
 ### Prerequisites
 - C99+ compiler (gcc, clang)
@@ -92,44 +92,15 @@ cd Xpression-Engine-C
 
 # Compile
 gcc -o xpression -O2 -s *.c
-
-# Run
-./xpression
 ```
 
-## 🚀 Quick Start
-
-### Your First Command
-
-```bash
-# Evaluate a simple sum
-./xpression -eval "${SUM(10, 20, 5)}"
-# Output: 35
-
-# View AST in JSON
-./xpression -json -eval "${MAX(1, 9, 4)}"
-# Output: AST + Result: 9
-
-# Logical operations
-./xpression -eval "${IF(GT(10,5), 'yes', 'no')}"
-# → "yes"
-
-# Array manipulation
-./xpression -eval "${MAX([1, 9, 4])}"
-# → 9
-
-# Text processing
-./xpression -eval "${CONCAT('Hello', ' ', 'World')}"
-# → "Hello World"
-
-```
 ### Basic Syntax
 
 ```bash
 ./xpression [options] "${EXPRESSION}"
 ```
 
-## 📖 Usage Guide
+## Usage Guide
 
 ### Available Options
 
@@ -142,7 +113,7 @@ gcc -o xpression -O2 -s *.c
 | `-f file` | Reads expression from file | `./xpression -eval -f input.txt` |
 
 
-## 🔧 Built-in Functions
+## Built-in Functions
 
 ### Mathematical
 
@@ -184,7 +155,7 @@ gcc -o xpression -O2 -s *.c
 | `SORT([...])` | Sorts the Array | `SORT(UNIQUE([1,2,34,4,3,432,22,2,3,1]))` | `[1,2,3,4,22,34,432]` |
 | `UNIQUE([...])` | Generates Array without repeated elements | `UNIQUE([1,2,34,4,3,432,22,2,3,1])` | `[1,2,34,4,3,432,22]` |
 
-## 🌳 Context Variables
+## Context Variables
 
 The system has a pre-defined hierarchical context:
 
@@ -331,7 +302,7 @@ root
 # </expressions>
 ```
 
-## 🧩 Extensibility
+## Extensibility
 
 ### Adding Custom Functions
 
@@ -367,7 +338,7 @@ CtxNode *build_custom_context(void) {
 }
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -400,7 +371,7 @@ CtxNode *build_custom_context(void) {
 ./xpression -eval "${SUM(A,B)}"     # With variables
 ```
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are very welcome! 
 
