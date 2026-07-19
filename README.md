@@ -17,9 +17,14 @@ Português | [English](README_en.md)
 
 </div>
 
-# Xpression Engine
-
-> Um motor modular de avaliação de expressões em C com suporte a funções built-in, variáveis de contexto e export da AST em JSON/XML.
+> [!WARNING]
+> Este repositório contém a versão de desenvolvimento do projecto.
+>
+> O código presente na branch `main` está em desenvolvimento contínuo e pode conter alterações incompletas, instáveis ou que ainda **não compilam correctamente**.
+>
+> Para obter uma versão estável e testada, faça o download da versão mais recente na secção **Releases** do projecto.
+>
+> 🔗 **Releases:** https://github.com/CodeShark37/Xpression-Engine-C/releases
 
 ## Índice
 
@@ -34,14 +39,14 @@ Português | [English](README_en.md)
 - Extensibilidade
 - Contribuição
 
-##  O que é o Xpression Engine?
+##  O que é a Xpression Engine?
 
 O **Xpression Engine** é uma biblioteca em C que permite avaliar expressões encapsuladas no formato `${EXPRESSION}`. É perfeito para sistemas que precisam de processamento dinâmico de configurações, templates ou cálculos em tempo de execução.
 
 **Compatibilidade:**
 - **Sistemas Operacionais:** Linux, Windows
 - **Arquiteturas:** x86, x86_64, ARM, AArch64
-- **Padrão:** C99+
+- **Padrão:** C11+
 
 
 
@@ -50,15 +55,15 @@ O **Xpression Engine** é uma biblioteca em C que permite avaliar expressões en
 | Categoria | Feature |  Detalhes | Status |#|
 |-----------|---------|--------|-----------|--|
 | **Core** | Avaliação de expressões | Parser robusto com AST | Completo |  ✅ |
-| 🔧 **Funções** | Built-in functions |  Math, Text, Logic, Arrays | **20 funções**  | ✅ |
-| 🌳 **Contexto** | Hierarquia de variáveis  | Suporte a encadeamento profundo | Completo | ✅ |
-| 📊 **Export** | AST (JSON/XML) | Estruturado e agrupado|  Completo | ✅ |
-| 🚀 **Performance** | Zero dependências | Apenas stdlib C| Completo  | ✅ |
-| 🔌 **API** | Extensibilidade | Interface para funções customizadas| Completo  | ✅ |
-| 🛡️ **Robustez** | Error handling | Mensagens detalhadas de erro| **Melhorado**  | ✅ |
-| 📝 **Tipos** | Suporte a tipos | Números, Strings, Booleanos, Arrays | **Expandido** | ✅ |
+| **Funções** | Built-in functions |  Math, Text, Logic, Arrays | **20 funções**  | ✅ |
+| **Contexto** | Hierarquia de variáveis  | Suporte a encadeamento profundo | Completo | ✅ |
+| **Export** | AST (JSON/XML) | Estruturado e agrupado|  Completo | ✅ |
+| **Performance** | Zero dependências | Apenas stdlib C| Completo  | ✅ |
+| **API** | Extensibilidade | Interface para funções customizadas| Completo  | ✅ |
+| **Robustez** | Error handling | Mensagens detalhadas de erro| **Melhorado**  | ✅ |
+| **Tipos** | Suporte a tipos | Números, Strings, Booleanos, Arrays | **Expandido** | ✅ |
 | **Usabilidade** | Contexto em tempo real | Definição de contexto via CLI ou ficheiro| **Brevemente**  | 🚀 |
-| 🌐 **Integração** | Conexão com DBs | Definição de contexto via DB MySQL,etc| **Brevemente**  | 🚀 |
+| **Integração** | Conexão com DBs | Definição de contexto via DB MySQL,etc| **Brevemente**  | 🚀 |
 
 ### Sintaxe Rica Suportada
 
@@ -197,7 +202,7 @@ root
 ./xpression -eval "${SUM(A, B, C)}"         # → 35
 ```
 
-## 💡 Exemplos Práticos
+## Exemplos Práticos
 
 ### Exemplos Básicos
 
@@ -389,7 +394,7 @@ Contribuições são muito bem-vindas!
 
 ### Diretrizes
 
-- ✅ Código em C99+
+- ✅ Código em C11+
 - ✅ Testes para novas funcionalidades
 - ✅ Documentação atualizada
 - ✅ Commits descritivos

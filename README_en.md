@@ -17,9 +17,14 @@ English | [Português](README.md)
 
 </div>
 
-# Xpression Engine
-
-> A modular expression evaluation engine in C with built-in functions, context variables, and AST export in JSON/XML.
+> [!WARNING]
+> **I strongly recommend downloading the latest release instead of cloning this repository.**
+>
+> The code in this repository is under active development and may contain incomplete changes, breaking updates, or code that **does not compile**.
+>
+> For a stable and tested version, please download the latest release from the **Releases** page.
+>
+> 🔗 **Releases:** https://github.com/CodeShark37/Xpression-Engine-C/releases
 
 ## Table of Contents
 
@@ -41,22 +46,22 @@ English | [Português](README.md)
 **Compatibility:**
 - **Operating Systems:** Linux, Windows
 - **Architectures:** x86, x86_64, ARM, AArch64
-- **Standard:** C99+
+- **Standard:** C11+
 
 ## Features
 
 | Category | Feature | Details | Status |#|
 |----------|---------|---------|--------|--|
 | **Core** | Expression evaluation | Robust parser with AST | Complete | ✅ |
-| 🔧 **Functions** | Built-in functions | Math, Text, Logic, Arrays | **20 functions** | ✅ |
-| 🌳 **Context** | Variable hierarchy | Deep chaining support | Complete | ✅ |
-| 📊 **Export** | AST (JSON/XML) | Structured and grouped | Complete | ✅ |
-| 🚀 **Performance** | Zero dependencies | Only C stdlib | Complete | ✅ |
-| 🔌 **API** | Extensibility | Interface for custom functions | Complete | ✅ |
+| **Functions** | Built-in functions | Math, Text, Logic, Arrays | **20 functions** | ✅ |
+| **Context** | Variable hierarchy | Deep chaining support | Complete | ✅ |
+| **Export** | AST (JSON/XML) | Structured and grouped | Complete | ✅ |
+| **Performance** | Zero dependencies | Only C stdlib | Complete | ✅ |
+| **API** | Extensibility | Interface for custom functions | Complete | ✅ |
 | **Robustness** | Error handling | Detailed error messages | **Improved** | ✅ |
-| 📝 **Types** | Type support | Numbers, Strings, Booleans, Arrays | **Expanded** | ✅ |
+| **Types** | Type support | Numbers, Strings, Booleans, Arrays | **Expanded** | ✅ |
 | **Usability** | Real-time context | Context definition via CLI or file | **Coming Soon** | 🚀 |
-| 🌐 **Integration** | Database connectivity | Context definition via MySQL, etc. | **Coming Soon** | 🚀 |
+| **Integration** | Database connectivity | Context definition via MySQL, etc. | **Coming Soon** | 🚀 |
 
 ### Rich Supported Syntax
 
@@ -194,7 +199,7 @@ root
 ./xpression -eval "${SUM(A, B, C)}"         # → 35
 ```
 
-## 💡 Practical Examples
+## Practical Examples
 
 ### Basic Examples
 
@@ -385,7 +390,7 @@ Contributions are very welcome!
 
 ### Guidelines
 
-- ✅ C99+ code
+- ✅ C11+ code
 - ✅ Tests for new functionalities
 - ✅ Updated documentation
 - ✅ Descriptive commits
