@@ -37,6 +37,7 @@ English | [Português](README.md)
 - Context Variables
 - Practical Examples
 - Extensibility
+- The Evolution of the Engine (and of a Programmer)
 - Contributing
 
 ## What is Xpression Engine?
@@ -375,6 +376,88 @@ CtxNode *build_custom_context(void) {
 ./xpression -eval "${SUM(1,2)}"     # Basic test
 ./xpression -eval "${SUM(A,B)}"     # With variables
 ```
+
+## The Evolution of the Engine (and of a Programmer)
+
+Almost a year ago, while developing a C project, I ran into the need to store some data in a hierarchical context and access it using a placeholder like `${obj.prop}`.
+
+What was supposed to be just another feature turned into an expression engine that pushed me to learn more and more, deepening my knowledge of parsers, compilers, architecture, and software documentation.
+
+Today, heading toward the 3rd version (v3.0), I look back and I'm glad for the journey so far.
+
+### Before v1.0: learning to write a parser
+
+The first obstacle wasn't deciding what the engine should do, but figuring out how to write it.
+
+I started by studying approaches that, at first, seemed natural for this kind of problem: tokenizers, parser combinators, and Pratt parsers. I tried each of them, but none fit exactly the expression language I wanted to build. Tokenizers ended up introducing a separation that didn't bring me any real advantage, and the other approaches didn't offer the balance between simplicity and flexibility I was looking for either.
+
+After several experiments, I ended up following a different path: an ad-hoc parser, responsible for analyzing the expression directly and building the AST without going through a separate tokenization phase. It was a decision shaped by the project's evolution, but it turned out to be the solution that best fit the engine's grammar.
+
+That decision forced me to confront problems that no isolated feature prepares you for: interpreting a sequence of characters without ambiguity, designing a grammar capable of supporting chaining (`CONFIG.DB.USER.SETTINGS`), multi-access (`OBJ.[prop1, prop2]`), and nested functions, and turning all of that into a coherent AST that could later be validated and evaluated.
+
+At that stage, `Value` was still a simple struct with a dedicated field for each data type — `struct Val { double number; char *string; struct Val list; ... }`. It worked, but every `Value` carried the weight of all possible types, even when only one was actually in use.
+
+This is when I realized I was no longer building a simple feature, but an expression language, with its own syntax, precedence, and evaluation rules. More than learning to write a parser, I learned to compare approaches, weigh their trade-offs, and choose the solution that made sense for that problem, instead of following a pattern just because it was the most well-known one.
+
+### From v1.0 to maturity: growing without breaking
+
+With the parser working, the challenge changed nature: it was no longer about writing from scratch, but about adding functionality without breaking what was already in place. Every new built-in function, every new data type, and every new way of accessing the context was an opportunity to introduce a silent regression somewhere in the grammar.
+
+It was also during this phase that the CLI module became the project's first real headache. I wanted to enforce a strict order for the command-line options (`-eval`, `-json`, `-xml`, `-group`, `-f`), and nothing I tried felt correct or clean, until I realized I needed a finite state machine (FSM). It wasn't a new concept to me, but I had never seen it applied to this kind of problem. It was the first time that theoretical idea clicked so naturally with a concrete problem I'd already been trying to solve in other ways for a while.
+
+Even so, even after being disciplined by the FSM, the CLI module (`cli.c`) still did too much: it parsed the arguments, called the expression parser, ran the evaluation, and handled printing the result. At the time I accepted that solution, but the sense that there were too many responsibilities crammed in there stayed with me, waiting for v3.0.
+
+It was also around then that I started to realize that many problems stop looking complicated once you find the right model to represent them.
+
+The result of this phase was an engine with 20 built-in functions for math, text, logic, and array operations, support for multiple data types, AST export to JSON and XML, and a more disciplined CLI. The error system started reporting line, column, and specific messages for each type of failure, all of this with no external dependencies beyond the C standard library, while keeping compatibility with C11+ and multiple platforms.
+
+More than a list of features, this phase taught me that growing a project doesn't just mean adding code. It means making sure that what already exists stays correct, predictable, and easy to evolve.
+
+### v3.0: consolidation and internal robustness
+
+Once the engine started to stabilize, I realized it was time to look less at what it did and more at how it was built.
+
+With around twenty built-in functions manipulating `Value`, the functions module (`functions.c`) had accumulated the same pattern repeated dozens of times: walking arguments, validating types, extracting values, and only then running each function's specific logic. The solution was to create a Traverse API, responsible for all of that shared work, leaving each built-in to worry only about its own logic.
+
+That change naturally opened up space for function descriptors, where each built-in started explicitly declaring its return type, parameter types, and arity. With that information available, the validate module (`validate.c`) started validating calls automatically, freeing each function from that responsibility.
+
+More important than eliminating repeated code was realizing the difference between abstracting code and creating an abstraction that actually simplifies the architecture.
+
+That same concern for simplicity also drove the evolution of `Value`. After its first representation as a struct dedicated to each type, and the later phase based on `void *`, v3.0 adopted NaN Boxing, turning `Value` into a compact 8-byte type, always passed by value.
+
+More important than shrinking the size of `Value` was realizing how the internal representation of data shapes the entire architecture of the engine, the simplicity of the API, and even the way the rest of the code evolves.
+
+That same search for clarity extended to the AST as well. I introduced the `NODE_ACCESS` node as an explicit container to eliminate existing ambiguities, moved semantic validations from `parser.c` to `validate.c`, and set a depth limit to guard against excessive recursion. Individually these were small changes; together, they made the system more predictable and each module more responsible for its own job.
+
+The biggest change, however, came when I finally decided to tackle the CLI module (`cli.c`).
+
+Looking closer at the problem, I realized the module wasn't complicated just because it did too much. The real problem was that several modules implicitly depended on one another, creating a chain of dependencies that was hard to maintain. Separating responsibilities required first creating a common place for all the shared information.
+
+That need is what gave birth to `XpressionContext`, a central context that replaces the `ErrorManager` singleton and eliminates most of that coupling between modules. Parser, evaluation, error system, printing, and CLI finally started communicating through a shared context, without depending directly on one another.
+
+In the end, I realized the real problem was rarely a file that was too big. It was almost always the invisible dependencies between modules. Solving those dependencies taught me far more about software architecture than any isolated optimization ever did.
+
+### Documentation
+
+During this same phase, another challenge came up: properly documenting the engine with Doxygen.
+
+It was a completely different exercise from writing code. There were no algorithms to optimize, no bugs to fix. The challenge was explaining decisions, justifying choices, and organizing information so that someone else could understand the project without needing to ask the author.
+
+I wanted the documentation to be useful both for someone who had never worked with parsers and for someone who just needed to quickly understand a specific module. That forced me to explain decisions that, until then, only existed in my head.
+
+Interestingly, documenting revealed areas where I myself hadn't organized my ideas well enough yet. Several times, writing the documentation led me to simplify interfaces, rename structures, and make parts of the architecture clearer.
+
+That's also when I realized documenting had stopped being a task done at the end of development. It had become part of the process of designing software itself.
+
+### What Xpression Engine taught me
+
+Looking back, from that first `${obj.prop}` placeholder to here, what remains isn't just a more robust engine. Every limitation I ran into ended up pushing me toward the right concept: a proper parser, a finite state machine, more solid abstractions, a decentralized architecture, and documentation designed for whoever comes next.
+
+It all started because I needed to solve a concrete problem. A year later, I realize the biggest evolution wasn't just the Xpression Engine's, but my own as a programmer.
+
+Today I understand that programming stopped being just about writing code that works. It became about designing systems that are simple to understand, maintain, and evolve, even months later, and even by someone who has never seen that code before.
+
+v3.0 is still under development, but it already represents, to me, much more than a new version. It represents proof that it's always worth stopping to ask "why is this still hard?" instead of just working around the symptom.
 
 ## Contributing
 
