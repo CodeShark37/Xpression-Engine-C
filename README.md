@@ -529,7 +529,12 @@ O que a Xpression Engine me ensinou
 Olhando para trás, do primeiro placeholder ${obj.prop} até aqui, o que fica não é apenas uma engine mais robusta. Cada limitação encontrada acabou por empurrar-me para o conceito certo: um parser a sério, uma máquina de estados finita, abstrações mais sólidas, uma arquitectura descentralizada e uma documentação pensada para quem vem depois.
 Tudo começou porque precisava de resolver um problema concreto. Um ano depois, percebo que a maior evolução não foi apenas a da Xpression Engine, mas também a minha enquanto programador.
 Hoje percebo que programar deixou de ser apenas escrever código que funciona. Passou a ser desenhar sistemas simples de compreender, de manter e de evoluir, mesmo meses depois e até por alguém que nunca viu aquele código antes.
-A v3.0 continua em desenvolvimento, mas já representa, para mim, muito mais do que uma nova versão. Representa a prova de que vale sempre a pena parar e perguntar "porque é que isto continua difícil?" em vez de simplesmente contornar o sintoma.
+
+A v3.0 continua em desenvolvimento, mas já representa a prova de que vale a pena parar e perguntar: 
+
+« Porque é que isto continua difícil? »
+
+Na maioria das vezes, a resposta não é que falta escrever mais código, mas que a arquitectura ainda precisa de evoluir.
 
 ### Dicas de Debug
 
