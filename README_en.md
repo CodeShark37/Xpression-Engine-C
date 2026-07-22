@@ -457,7 +457,11 @@ It all started because I needed to solve a concrete problem. A year later, I rea
 
 Today I understand that programming stopped being just about writing code that works. It became about designing systems that are simple to understand, maintain, and evolve, even months later, and even by someone who has never seen that code before.
 
-v3.0 is still under development, but it already represents, to me, much more than a new version. It represents proof that it's always worth stopping to ask "why is this still hard?" instead of just working around the symptom.
+Version 3.0 is still under development, but it has already become proof that it's worth stopping and asking:
+
+"Why is this still difficult?"
+
+More often than not, the answer isn't that you need to write more code—it's that your architecture needs to evolve.
 
 ## Contributing
 
