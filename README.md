@@ -37,6 +37,7 @@ Português | [English](README_en.md)
 - Variáveis de Contexto
 - Exemplos Práticos
 - Extensibilidade
+- A Evolução da Engine (e de um Programador)
 - Contribuição
 
 ##  O que é a Xpression Engine?
@@ -85,7 +86,7 @@ Aninhamento:      IF(GT(A,B), SUM(A,10), MUL(B,5))
 ## Instalação
 
 ### Pré-requisitos
-- Compilador C99+ (gcc, clang)
+- Compilador Linuxession+ (gcc, clang)
 - CMake (opcional)
 
 ### Instalação Rápida
@@ -317,7 +318,7 @@ root
 ```c
 #include "functions.h"
 
-// Definir nova função
+/C99efinir nova função
 Value *fn_multiply(Value* this, Value **args, size_t argc) {
     if (argc != 2) return val_num(0);
     return val_num(args[0]->num * args[1]->num);
@@ -368,6 +369,167 @@ CtxNode *build_custom_context(void) {
 | **Multi-acesso** | Separador inválido em multi-acesso | `"obj.[prop1 prop2]"` | `L1:C12: expected ',' or ']' in multi-access` | Faltam vírgulas entre elementos do multi-acesso |
 | **Propriedades** | Propriedade faltando após ponto | `"obj."` | `L1:C5: expected property after '.'` | Ponto não seguido de propriedade válida |
 | **Memória** | Falha de alocação | N/A (erro do sistema) | `L1:C1: memory allocation failed` | Erro interno de alocação de memória |
+
+### Dicas de Debug
+
+```bash
+# Ver AST para debug
+./xpression -json "${EXPRESSAO}"
+
+# Testar passo a passo
+./xpression -eval "${SUM(1,2)}"     # Teste básico
+./xpression -eval "${SUM(A,B)}"     # Com variáveis
+```
+
+## A Evolução da Engine (e de um Programador)
+
+Há quase um ano durante o desenvolvimento de um projecto em C surgiu a necessidade de guardar alguns dados em um contexto hierárquico e me permita acessar usando um placeholder `${obj.prop}`.
+
+Aquilo que era para ser apenas mais uma feature tornou-se uma Engine de expressões que levou-me a aprender mais e mais e aprofundar meus conhecimentos sobre parsers, compiladores, arquitectura e documentação de software.
+
+Hoje a caminho da 3ª versão (v3.0), olho para trás e me alegro do percurso até aqui feito.
+
+### Antes da v1.0: aprender a escrever um parser
+
+O primeiro obstáculo não foi decidir o que a engine devia fazer, mas descobrir como a escrevê-la.
+
+Comecei por estudar abordagens que, à partida, pareciam naturais para este tipo de problema: tokenizers, parser combinators e Pratt parsers. Experimentei cada uma delas, mas nenhuma se encaixava exactamente na linguagem de expressões que queria construir. Os tokenizers acabavam por introduzir uma separação que não me trazia vantagens, e as restantes abordagens também não ofereciam o equilíbrio entre simplicidade e flexibilidade que procurava.
+
+Depois de várias experiências, acabei por seguir um caminho diferente: um parser ad-hoc, responsável por analisar directamente a expressão e construir a AST sem passar por uma fase de tokenização. Foi uma decisão tomada pela evolução do projecto, mas acabou por ser a solução que melhor se adaptou à gramática da engine.
+
+Essa decisão obrigou-me a confrontar problemas que nenhuma feature isolada prepara: interpretar uma sequência de caracteres sem ambiguidades, desenhar uma gramática capaz de suportar encadeamento (`CONFIG.DB.USER.SETTINGS`), multi-acesso (`OBJ.[prop1, prop2]`) e funções aninhadas, transformando tudo isso numa AST coerente que depois pudesse ser validada e avaliada.
+
+Nessa fase, `Value` era ainda uma struct simples com um campo dedicado para cada tipo de dado — `struct Val { double number; char *string; struct Val list; ... }`. Funcionava, mas cada `Value` carregava o peso de todos os tipos possíveis, mesmo quando apenas um estava em uso.
+
+Foi aqui que percebi que já não estava a construir uma simples funcionalidade, mas uma linguagem de expressões, com a sua própria sintaxe, precedência e regras de avaliação. Mais do que aprender a escrever um parser, aprendi a comparar abordagens, avaliar os seus compromissos e escolher a solução que fazia sentido para aquele problema, em vez de seguir um padrão apenas porque era o mais conhecido.
+
+### Da v1.0 à maturidade: crescer sem quebrar
+
+Com o parser a funcionar, o desafio mudou de natureza: já não era escrever do zero, mas acrescentar funcionalidades sem destruir o que já estava de pé. Cada nova função built-in, cada novo tipo de dado e cada nova forma de acesso ao contexto eram oportunidades para introduzir regressões silenciosas algures na gramática.
+
+Foi também nesta fase que o módulo CLI se tornou a primeira grande dor de cabeça do projecto. Eu queria impor uma ordem estrita nas opções da linha de comandos (`-eval`, `-json`, `-xml`, `-group`, `-f`), e nada do que tentava parecia correcto e limpo, até perceber que precisava de uma máquina de estados finita (FSM). Não era um conceito novo para mim, mas nunca o tinha visto aplicado a este tipo de problema. Foi a primeira vez que essa ideia teórica se encaixou de forma tão natural num problema concreto que já andava há algum tempo a tentar resolver de outras formas.
+
+Ainda assim, mesmo disciplinada pela FSM, o módulo CLI (`cli.c`) continuava a fazer demasiado: fazia o parsing dos argumentos, chamava o parser da expressão, executava a avaliação e tratava da impressão do resultado. Na altura aceitei essa solução, mas a sensação de que havia ali responsabilidades a mais ficou semeada para a v3.0.
+
+Foi também aí que comecei a perceber que muitos problemas deixam de parecer complicados quando encontramos o modelo certo para os representar.
+
+O resultado desta fase foi uma engine com 20 funções built-in para operações matemáticas, texto, lógica e arrays, suporte a múltiplos tipos de dados, exportação da AST para JSON e XML e uma CLI mais disciplinada. O sistema de erros passou a indicar linha, coluna e mensagens específicas para cada tipo de falha, tudo isto sem dependências externas além da biblioteca padrão de C, mantendo compatibilidade com C11+ e diferentes plataformas.
+
+Mais do que uma lista de funcionalidades, esta fase ensinou-me que fazer um projecto crescer não significa apenas adicionar código. Significa garantir que aquilo que já existe continua correcto, previsível e simples de evoluir.
+
+### v3.0: consolidação e robustez interna
+
+Quando a engine começou a estabilizar, percebi que era altura de olhar menos para aquilo que ela fazia e mais para a forma como estava construída.
+
+Com cerca de vinte funções built-in a manipular `Value`, o módulo de funções (`functions.c`) tinha acumulado o mesmo padrão repetido dezenas de vezes: percorrer argumentos, validar tipos, extrair valores e só depois executar a lógica específica de cada função. A solução passou por criar uma Traverse API, responsável por todo esse trabalho comum, deixando cada built-in preocupada apenas com a sua lógica.
+
+Essa alteração abriu naturalmente espaço para os descritores de função, onde cada built-in passou a declarar explicitamente o tipo de retorno, os tipos dos parâmetros e a aridade. Com essa informação disponível, o módulo validate (`validate.c`) passou a validar automaticamente as chamadas, libertando cada função dessa responsabilidade.
+
+Mais importante do que eliminar código repetido, foi perceber a diferença entre abstrair código e criar uma abstração que realmente simplifica a arquitectura.
+
+A mesma preocupação com simplicidade levou também à evolução de `Value`. Depois da primeira representação baseada numa struct dedicada para cada tipo e da fase seguinte baseada em `void *`, a v3.0 adoptou NaN Boxing, transformando `Value` num tipo compacto de apenas 8 bytes, passado sempre por valor.
+
+Mais importante do que reduzir o tamanho de `Value`, foi perceber como a representação interna dos dados influencia toda a arquitectura da engine, a simplicidade da API e até a forma como o restante código evolui.
+
+Essa procura por maior clareza estendeu-se igualmente à AST. Introduzi o nó `NODE_ACCESS` como um container explícito para eliminar ambiguidades existentes, transferi as validações semânticas de `parser.c` para `validate.c` e defini um limite de profundidade para proteger contra recursão excessiva. Individualmente eram alterações pequenas; em conjunto, tornaram o sistema mais previsível e cada módulo mais responsável pela sua própria função.
+
+A maior mudança, no entanto, surgiu quando decidi finalmente resolver o módulo CLI (`cli.c`).
+
+Ao analisar o problema, percebi que o módulo não era complicado apenas porque fazia demasiado. O verdadeiro problema era que vários módulos dependiam implicitamente uns dos outros, criando uma cadeia de dependências difícil de manter. Separar responsabilidades exigia primeiro criar um local comum para toda a informação partilhada.
+
+Foi dessa necessidade que nasceu o `XpressionContext`, um contexto central que substitui o singleton `ErrorManager` e elimina grande parte desse acoplamento entre módulos. Parser, avaliação, sistema de erros, impressão e CLI passaram finalmente a comunicar através de um contexto comum, sem depender directamente uns dos outros.
+
+No fim, percebi que o verdadeiro problema raramente era um ficheiro demasiado grande. Quase sempre eram as dependências invisíveis entre módulos. Resolver essas dependências ensinou-me muito mais sobre arquitectura de software do que qualquer optimização isolada.
+
+### Documentação
+
+Durante esta mesma fase surgiu outro desafio: documentar correctamente a engine com Doxygen.
+
+Foi um exercício completamente diferente de escrever código. Não havia algoritmos para optimizar nem bugs para resolver. O desafio era explicar decisões, justificar escolhas e organizar a informação de forma que outra pessoa conseguisse compreender o projecto sem precisar de perguntar ao autor.
+
+Quis que a documentação fosse útil tanto para alguém que nunca tivesse trabalhado com parsers como para quem apenas precisasse de compreender rapidamente um módulo específico. Isso obrigou-me a explicar decisões que, até então, só existiam na minha cabeça.
+
+Curiosamente, documentar revelou zonas onde eu próprio ainda não tinha organizado suficientemente bem as ideias. Em vários momentos, escrever a documentação levou-me a simplificar interfaces, renomear estruturas e tornar partes da arquitectura mais claras.
+
+Foi também aí que percebi que documentar deixou de ser uma tarefa feita no fim do desenvolvimento. Passou a fazer parte do próprio processo de desenhar software.
+
+### O que a Xpression Engine me ensinou
+
+Olhando para trás, do primeiro placeholder `${obj.prop}` até aqui, o que fica não é apenas uma engine mais robusta. Cada limitação encontrada acabou por empurrar-me para o conceito certo: um parser a sério, uma máquina de estados finita, abstrações mais sólidas, uma arquitectura descentralizada e uma documentação pensada para quem vem depois.
+
+Tudo começou porque precisava de resolver um problema concreto. Um ano depois, percebo que a maior evolução não foi apenas a da Xpression Engine, mas também a minha enquanto programador.
+
+Hoje percebo que programar deixou de ser apenas escrever código que funciona. Passou a ser desenhar sistemas simples de compreender, de manter e de evoluir, mesmo meses depois e até por alguém que nunca viu aquele código antes.
+
+A v3.0 continua em desenvolvimento, mas já representa, para mim, muito mais do que uma nova versão. Representa a prova de que vale sempre a pena parar e perguntar "porque é que isto continua difícil?" em vez de simplesmente contornar o sintoma.
+
+## Contribuição
+
+Contribuições são muito bem-vindas! 
+
+### Como Contribuir
+
+1. **Fork** o repositório
+2. **Crie** uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
+3. **Commit** suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
+4. **Push** para a branch (`git push origin feature/nova-funcionalidade`)
+5. **Abra** um Pull Request
+
+### Diretrizes
+
+- ✅ Código em C11+
+- ✅ Testes para novas funcionalidades
+- ✅ Documentação atualizada
+- ✅ Commits descritivos
+
+### Reportar Issues
+
+Encontrou um bug ou tem uma sugestão? [Abra uma issue](https://github.com/CodeShark37/Xpression-Engine-C/issues)!
+
+---
+
+<div align="center">
+  
+**Se este projeto te ajudou de alguma forma, deixe uma estrela!**  
+  
+**Feito com ❤️ em Angola**
+
+[![Stars](https://img.shields.io/github/stars/CodeShark37/Xpression-Engine-C?style=social)](https://github.com/CodeShark37/Xpression-Engine-C)
+[![Forks](https://img.shields.io/github/forks/CodeShark37/Xpression-Engine-C?style=social)](https://github.com/CodeShark37/Xpression-Engine-C)
+
+</div>
+Nessa fase, Value era ainda uma struct simples com um campo dedicado para cada tipo de dado — struct Val { double number; char *string; struct Val list; ... }. Funcionava, mas cada Value carregava o peso de todos os tipos possíveis, mesmo quando apenas um estava em uso.
+Foi aqui que percebi que já não estava a construir uma simples funcionalidade, mas uma linguagem de expressões, com a sua própria sintaxe, precedência e regras de avaliação. Mais do que aprender a escrever um parser, aprendi a comparar abordagens, avaliar os seus compromissos e escolher a solução que fazia sentido para aquele problema, em vez de seguir um padrão apenas porque era o mais conhecido.
+Da v1.0 à maturidade: crescer sem quebrar
+Com o parser a funcionar, o desafio mudou de natureza: já não era escrever do zero, mas acrescentar funcionalidades sem destruir o que já estava de pé. Cada nova função built-in, cada novo tipo de dado e cada nova forma de acesso ao contexto eram oportunidades para introduzir regressões silenciosas algures na gramática.
+Foi também nesta fase que o módulo CLI se tornou a primeira grande dor de cabeça do projecto. Eu queria impor uma ordem estrita nas opções da linha de comandos (-eval, -json, -xml, -group, -f), e nada do que tentava parecia correcto e limpo, até perceber que precisava de uma máquina de estados finita (FSM). Não era um conceito novo para mim, mas nunca o tinha visto aplicado a este tipo de problema. Foi a primeira vez que essa ideia teórica se encaixou de forma tão natural num problema concreto que já andava há algum tempo a tentar resolver de outras formas.
+Ainda assim, mesmo disciplinada pela FSM, o módulo CLI (cli.c) continuava a fazer demasiado: fazia o parsing dos argumentos, chamava o parser da expressão, executava a avaliação e tratava da impressão do resultado. Na altura aceitei essa solução, mas a sensação de que havia ali responsabilidades a mais ficou semeada para a v3.0.
+Foi também aí que comecei a perceber que muitos problemas deixam de parecer complicados quando encontramos o modelo certo para os representar.
+O resultado desta fase foi uma engine com 20 funções built-in para operações matemáticas, texto, lógica e arrays, suporte a múltiplos tipos de dados, exportação da AST para JSON e XML e uma CLI mais disciplinada. O sistema de erros passou a indicar linha, coluna e mensagens específicas para cada tipo de falha, tudo isto sem dependências externas Antesstruir da biblioteca padrão de C, mantendo compatibilidade com C11+ e diferentes plataformas.
+Mais do que uma lista de funcionalidades, esta fase ensinou-me que fazer um projecto crescer não significa apenas adicionar código. Significa garantir que aquilo que já existe continua correcto, previsível e simples de evoluir.
+### v3.0: consolidação e robustez interna
+Quando a engine começou a estabilizar, percebi que era altura de olhar menos para aquilo que ela fazia e mais para a forma como estava construída.
+Com cerca de vinte funções built-in a manipular Value, o módulo de funções (functions.c) tinha acumulado o mesmo padrão repetido dezenas de vezes: percorrer argumentos, validar tipos, extrair valores e só depois executar a lógica específica de cada função. A solução passou por criar uma Traverse API, responsável por todo esse trabalho comum, deixando cada built-in preocupada apenas com a sua lógica.
+Essa alteração abriu naturalmente espaço para os descritores de função, onde cada built-in passou a declarar explicitamente o tipo de retorno, os tipos dos parâmetros e a aridade. Com essa informação disponível, o módulo validate (validate.c) passou a validar automaticamente as chamadas, libertando cada função dessa responsabilidade.
+Mais importante do que eliminar código repetido, foi perceber a diferença entre abstrair código e criar uma abstração que realmente simplifica a arquitectura.
+A mesma preocupação com simplicidade levou também à evolução de Value. Depois da primeira representação baseada numa struct dedicada para cada tipo e da fase seguinte baseada em void *, a v3.0 adoptou NaN Boxing, transformando Value num tipo compacto de apenas 8 bytes, passado sempre por valor.
+Mais importante do que reduzir o tamanho de Value, foi perceber como a representação interna dos dados influencia toda a arquitectura da engine, a simplicidade da API e até a forma como o restante código evolui.
+Essa procura por maior clareza estendeu-se igualmente à AST. Introduzi o nó NODE_ACCESS como um container explícito para eliminar ambiguidades existentes, transferi as validações semânticas de parser.c para validate.c e defini um limite de profundidade para proteger contra recursão excessiva. Individualmente eram alterações pequenas; em conjunto, tornaram o sistema mais previsível e cada módulo mais responsável pela sua própria função.
+A maior mudança, no entanto, surgiu quando decidi finalmente resolver o módulo CLI (cli.c).
+Ao analisar o problema, percebi que o módulo não era complicado apenas porque fazia demasiado. O verdadeiro problema era que vários módulos dependiam implicitamente uns dos outros, criando uma cadeia de dependências difícil de manter. Separar responsabilidades exigia primeiro criar um local comum para toda a informação partilhada.
+Foi dessa necessidade que nasceu o XpressionContext, um contexto central que substitui o singleton ErrorManager e elimina grande parte desse acoplamento entre módulos. Parser, avaliação, sistema de erros, impressão e CLI passaram finalmente a comunicar através de um contexto comum, sem depender directamente uns dos outros.
+No fim, percebi que o verdadeiro problema raramente era um ficheiro demasiado grande. Quase sempre eram as dependências invisíveis entre módulos. Resolver essas dependências ensinou-me muito mais sobre arquitectura de software do que qualquer optimização isolada.
+Documentação
+Durante esta mesma fase surgiu outro desafio: documentar correctamente a engine com Doxygen.
+Foi um exercício completamente diferente de escrever código. Não havia algoritmos para optimizar nem bugs para resolver. O desafio era explicar decisões, justificar escolhas e organizar a informação de forma que outra pessoa conseguisse compreender o projecto sem precisar de perguntar ao autor.
+Quis que a documentação fosse útil tanto para alguém que nunca tivesse trabalhado com parsers como para quem apenas precisasse de compreender rapidamente um módulo específico. Isso obrigou-me a explicar decisões que, até então, só existiam na minha cabeça.
+Curiosamente, documentar revelou zonas onde eu próprio ainda não tinha organizado suficientemente bem as ideias. Em vários momentos, escrever a documentação levou-me a simplificar interfaces, renomear estruturas e tornar partes da arquitectura mais claras.
+Foi também aí que percebi que documentar deixou de ser uma tarefa feita no fim do desenvolvimento. Passou a fazer parte do próprio processo de desenhar software.
+O que a Xpression Engine me ensinou
+Olhando para trás, do primeiro placeholder ${obj.prop} até aqui, o que fica não é apenas uma engine mais robusta. Cada limitação encontrada acabou por empurrar-me para o conceito certo: um parser a sério, uma máquina de estados finita, abstrações mais sólidas, uma arquitectura descentralizada e uma documentação pensada para quem vem depois.
+Tudo começou porque precisava de resolver um problema concreto. Um ano depois, percebo que a maior evolução não foi apenas a da Xpression Engine, mas também a minha enquanto programador.
+Hoje percebo que programar deixou de ser apenas escrever código que funciona. Passou a ser desenhar sistemas simples de compreender, de manter e de evoluir, mesmo meses depois e até por alguém que nunca viu aquele código antes.
+A v3.0 continua em desenvolvimento, mas já representa, para mim, muito mais do que uma nova versão. Representa a prova de que vale sempre a pena parar e perguntar "porque é que isto continua difícil?" em vez de simplesmente contornar o sintoma.
 
 ### Dicas de Debug
 
